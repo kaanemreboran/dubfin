@@ -492,7 +492,7 @@ async function aiSor(){
   msgs.scrollTop=msgs.scrollHeight;
 
   try{
-    var r=await fetch('/.netlify/functions/chat',{
+    var r=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({soru:soru})
