@@ -219,6 +219,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);min-
         <div class="chip" onclick="chipSor('Araç kiralama gider yazılır mı?')">Araç kiralama gider?</div>
         <div class="chip" onclick="chipSor('E-fatura zorunluluk eşiği nedir?')">E-fatura limiti?</div>
         <div class="chip" onclick="chipSor('KDV iadesi nasıl alınır?')">KDV iadesi?</div>
+        <div class="chip" onclick="aiTemizle()" style="color:var(--red);border-color:rgba(248,113,113,0.25);">🗑 Temizle</div>
       </div>
       <div class="ai-input-row">
         <input class="ai-inp" id="ai-inp" type="text" placeholder="Sorunuzu yazın..."
@@ -465,6 +466,10 @@ function renderTK(n){
 }
 
 // AI
+function aiTemizle(){
+  document.getElementById('ai-msgs').innerHTML='<div class="msg-a">Merhaba! Ben DubFin AI Asistan. TÜRMOB sirkülerleri ve mali mevzuat hakkında sorularınızı yanıtlıyorum.</div>';
+}
+
 function chipSor(s){
   document.getElementById('ai-inp').value=s;
   aiSor();
@@ -506,4 +511,3 @@ renderList();
 </script>
 </body>
 </html>
-<!-- v2 -->
