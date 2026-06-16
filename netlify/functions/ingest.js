@@ -14,24 +14,29 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { metin, sirkuler_no, tarih } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const sirkuler_no = body.sirkuler_no || 'bilinmiyor';
+    const tarih = body.tarih || '';
+    const metin = body.metin || '';
 
     const embeddingRes = await openai.embeddings.create({
       model: 'text-embedding-3-large',
-      input: metin,
+      input: metin.slice(0, 8000),
       dimensions: 3072,
     });
 
     const embedding = embeddingRes.data[0].embedding;
-
     const index = pinecone.index('dubfin');
-    await index.upsert([
-      {
-        id: sirkuler_no,
-        values: embedding,
-        metadata: { metin, sirkuler_no, tarih },
+
+    await index.upsert([{
+      id: sirkuler_no.replace(/[^a-zA-Z0-9-_]/g, '_'),
+      values: embedding,
+      metadata: {
+        metin: metin.slice(0, 1000),
+        sirkuler_no,
+        tarih,
       },
-    ]);
+    }]);
 
     return {
       statusCode: 200,
