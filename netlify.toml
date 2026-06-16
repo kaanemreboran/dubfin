@@ -1,5 +1,15 @@
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."chat"]
+  timeout = 26
+
+[functions."ingest"]
+  timeout = 26
+
+[functions."migrate"]
+  timeout = 26
 
 [[headers]]
   for = "/*"
