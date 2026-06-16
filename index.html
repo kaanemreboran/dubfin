@@ -3,429 +3,497 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DubFin.ai — Mali Mevzuat AI Asistanı</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<title>DubFin.ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#0F1E33;
-  --navy2:#162640;
-  --gold:#C9A227;
-  --gold-dim:rgba(201,162,39,0.15);
-  --white:#FFFFFF;
-  --muted:#8A9BB0;
-  --border:rgba(201,162,39,0.15);
-  --border2:rgba(255,255,255,0.07);
-  --text:#E2E8F0;
-  --text2:#8A9BB0;
-  --green:#48BB78;
-  --green-dim:rgba(72,187,120,0.15);
-  --red:#FC8181;
-  --red-dim:rgba(252,129,129,0.15);
-  --amber:#F6AD55;
-  --amber-dim:rgba(246,173,85,0.15);
-  --blue:#63B3ED;
-  --blue-dim:rgba(99,179,237,0.15);
-  --purple:#B794F4;
-  --purple-dim:rgba(183,148,244,0.15);
-  --sidebar-w:220px;
+  --bg:#0a0f1a;
+  --bg2:#111827;
+  --bg3:#1a2235;
+  --gold:#c9a227;
+  --gold2:rgba(201,162,39,0.12);
+  --white:#f1f5f9;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+  --border:rgba(255,255,255,0.06);
+  --green:#22c55e;
+  --green2:rgba(34,197,94,0.12);
+  --blue:#3b82f6;
+  --blue2:rgba(59,130,246,0.12);
+  --red:#ef4444;
+  --red2:rgba(239,68,68,0.12);
+  --amber:#f59e0b;
+  --amber2:rgba(245,158,11,0.12);
+  --purple:#a855f7;
+  --purple2:rgba(168,85,247,0.12);
 }
-body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;display:flex;}
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--navy2);border-right:1px solid var(--border2);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
-.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;}
-.logo-text{font-size:18px;font-weight:700;line-height:1;}
-.logo-text .dub{color:var(--white);}
-.logo-text .fin{color:var(--gold);}
-.logo-text .ai{color:var(--muted);font-weight:400;font-size:12px;}
-.sidebar-nav{flex:1;padding:12px 0;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;text-decoration:none;}
-.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04);}
-.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-dim);}
-.nav-icon{font-size:16px;width:18px;text-align:center;}
-.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border2);font-size:11px;color:var(--muted);}
-.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border2);background:rgba(15,30,51,0.8);backdrop-filter:blur(8px);position:sticky;top:0;z-index:40;}
-.topbar-title{font-size:17px;font-weight:600;color:var(--white);}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:56px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo svg{width:26px;height:26px;}
+.logo-text{font-size:17px;font-weight:700;}
+.logo-text b{color:var(--gold);}
+.topbar-nav{display:flex;gap:4px;}
+.nav-btn{
+  padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;
+  color:var(--muted2);cursor:pointer;border:none;background:transparent;
+  transition:all 0.15s;
+}
+.nav-btn:hover{color:var(--white);background:var(--bg3);}
+.nav-btn.active{color:var(--gold);background:var(--gold2);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-.badge-new{display:flex;align-items:center;gap:6px;background:var(--red-dim);border:1px solid rgba(252,129,129,0.3);color:var(--red);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;}
-.badge-new .dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-.topbar-date{font-size:12px;color:var(--muted);}
-.content{padding:24px 28px;flex:1;}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
-.metric-card{background:var(--navy2);border:1px solid var(--border2);border-radius:12px;padding:16px 20px;}
-.metric-label{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
-.metric-value{font-size:28px;font-weight:700;color:var(--white);line-height:1;}
-.metric-sub{font-size:12px;color:var(--muted);margin-top:4px;}
-.metric-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px;}
-.status-green{background:var(--green-dim);color:var(--green);}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
-.panel{background:var(--navy2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;}
-.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border2);}
-.panel-title{font-size:13px;font-weight:600;color:var(--white);}
-.panel-link{font-size:12px;color:var(--gold);text-decoration:none;font-weight:500;}
-.panel-body{padding:0;}
-.sirk-item{display:flex;flex-direction:column;gap:4px;padding:12px 18px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background 0.15s;}
-.sirk-item:last-child{border-bottom:none;}
-.sirk-item:hover{background:rgba(255,255,255,0.03);}
-.sirk-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.4;}
-.sirk-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);}
-.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
-.tag-kdv{background:var(--blue-dim);color:var(--blue);}
-.tag-sgk{background:var(--green-dim);color:var(--green);}
-.tag-fatura{background:var(--purple-dim);color:var(--purple);}
-.tag-muhtasar{background:var(--amber-dim);color:var(--amber);}
-.tag-diger{background:rgba(138,155,176,0.15);color:var(--muted);}
-.vergi-item{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border2);}
-.vergi-item:last-child{border-bottom:none;}
-.vergi-name{font-size:13px;font-weight:500;color:var(--text);flex:1;}
-.gun-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;}
-.gun-kirmizi{background:var(--red-dim);color:var(--red);}
-.gun-sari{background:var(--amber-dim);color:var(--amber);}
-.gun-yesil{background:var(--green-dim);color:var(--green);}
-.gun-mavi{background:var(--blue-dim);color:var(--blue);}
-.ai-panel{background:var(--navy2);border:1px solid var(--border);border-radius:12px;margin-bottom:22px;}
-.ai-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;}
-.ai-panel-title{font-size:13px;color:var(--muted);}
-.ai-ask-btn{font-size:12px;color:var(--gold);font-weight:600;cursor:pointer;border:none;background:none;padding:0;}
-.ai-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px;}
-.ai-chip{font-size:12px;color:var(--text2);background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;cursor:pointer;transition:all 0.15s;}
-.ai-chip:hover{border-color:var(--gold);color:var(--gold);}
-.ay-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border2);}
-.ay-tab{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;background:transparent;transition:all 0.15s;}
-.ay-tab:hover{border-color:var(--gold);color:var(--gold);}
-.ay-tab.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700;}
-.takvim-list{padding:0;}
-.takvim-row{display:grid;grid-template-columns:72px 1fr auto auto;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border2);transition:background 0.15s;}
-.takvim-row:last-child{border-bottom:none;}
-.takvim-row:hover{background:rgba(255,255,255,0.02);}
-.takvim-row.gecmis{opacity:0.35;}
-.takvim-row.gecmis .t-aciklama{text-decoration:line-through;}
-.takvim-row.yaklasan{border-left:2px solid var(--green);}
-.takvim-row.buay{border-left:2px solid var(--gold);}
-.t-tarih{font-size:12px;font-weight:700;color:var(--gold);}
-.takvim-row.gecmis .t-tarih{color:var(--muted);}
-.takvim-row.yaklasan .t-tarih{color:var(--green);}
-.t-aciklama{font-size:12px;color:var(--text2);line-height:1.4;}
-.t-tip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;}
-.t-durum{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;}
-.view{display:none;}
-.view.active{display:block;}
-#view-panel{display:block;}
-.chat-wrap{padding:16px;}
-.chat-messages{height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:12px;}
-.chat-input-row{display:flex;gap:8px;}
-.chat-input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--white);font-size:14px;font-family:'Inter',sans-serif;}
-.chat-input:focus{outline:none;border-color:var(--gold);}
-.chat-btn{padding:10px 20px;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;}
-.chat-btn:hover{background:var(--gold2);}
-.msg-kullanici{align-self:flex-end;background:var(--gold);color:var(--navy);padding:10px 14px;border-radius:12px;max-width:80%;font-size:14px;word-wrap:break-word;}
-.msg-ai{align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;max-width:80%;word-wrap:break-word;white-space:pre-wrap;line-height:1.6;}
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%);}
-  .main{margin-left:0;}
-  .metrics{grid-template-columns:1fr;}
-  .grid-2{grid-template-columns:1fr;}
-  .takvim-row{grid-template-columns:60px 1fr auto;}
+.badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--red);
+  background:var(--red2);padding:4px 10px;border-radius:20px;cursor:pointer;
 }
+.dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.date-text{font-size:12px;color:var(--muted);}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 56px);}
+
+/* SOL PANEL */
+.left-panel{
+  width:340px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.panel-header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.panel-count{font-size:11px;color:var(--muted);background:var(--bg3);padding:2px 8px;border-radius:10px;}
+
+/* KATEGORİ FİLTRE */
+.cat-tabs{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.cat-tab{
+  font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;
+  cursor:pointer;border:1px solid var(--border);color:var(--muted2);
+  background:transparent;transition:all 0.15s;
+}
+.cat-tab:hover{border-color:var(--gold);color:var(--gold);}
+.cat-tab.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600;}
+
+/* SİRKÜLER LİSTESİ */
+.sirk-list{flex:1;overflow-y:auto;}
+.sirk-list::-webkit-scrollbar{width:3px;}
+.sirk-list::-webkit-scrollbar-thumb{background:var(--border);}
+.sirk-item{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.12s;
+}
+.sirk-item:hover{background:var(--bg3);}
+.sirk-item.active{background:var(--gold2);border-left:2px solid var(--gold);}
+.sirk-no{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:4px;}
+.sirk-title{font-size:13px;font-weight:500;color:var(--white);line-height:1.4;margin-bottom:6px;}
+.sirk-meta{display:flex;align-items:center;gap:8px;}
+.sirk-date{font-size:11px;color:var(--muted);}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.t-sgk{background:var(--green2);color:var(--green);}
+.t-kdv{background:var(--blue2);color:var(--blue);}
+.t-muhtasar{background:var(--amber2);color:var(--amber);}
+.t-fatura{background:var(--purple2);color:var(--purple);}
+.t-diger{background:var(--bg3);color:var(--muted2);}
+.yeni-badge{font-size:9px;font-weight:700;background:var(--red);color:#fff;padding:1px 5px;border-radius:4px;text-transform:uppercase;}
+
+/* SAĞ PANEL */
+.right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* VIEW TABS */
+.view-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.view-tab{
+  flex:1;padding:14px;text-align:center;font-size:12px;font-weight:500;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.15s;
+}
+.view-tab:hover{color:var(--white);}
+.view-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* DETAY VIEW */
+.detay-view{flex:1;overflow-y:auto;padding:24px 32px;display:none;}
+.detay-view.active{display:block;}
+.detay-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--muted);gap:12px;
+}
+.detay-empty-icon{font-size:48px;opacity:0.3;}
+.detay-baslik{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.3;}
+.detay-meta{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.detay-no{font-size:12px;font-weight:600;color:var(--gold);}
+.detay-tarih{font-size:12px;color:var(--muted);}
+.detay-ozet{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:16px 20px;margin-bottom:20px;
+  font-size:14px;color:var(--muted2);line-height:1.7;
+}
+.detay-ozet-baslik{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px;}
+.detay-metin{font-size:14px;color:var(--muted2);line-height:1.8;}
+
+/* AI VIEW */
+.ai-view{flex:1;display:none;flex-direction:column;}
+.ai-view.active{display:flex;}
+.ai-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;}
+.ai-messages::-webkit-scrollbar{width:3px;}
+.ai-messages::-webkit-scrollbar-thumb{background:var(--border);}
+.msg-u{
+  align-self:flex-end;max-width:75%;
+  background:var(--gold);color:#000;
+  padding:10px 14px;border-radius:14px 14px 2px 14px;
+  font-size:14px;font-weight:500;
+}
+.msg-a{
+  align-self:flex-start;max-width:80%;
+  background:var(--bg3);border:1px solid var(--border);
+  padding:12px 16px;border-radius:2px 14px 14px 14px;
+  font-size:14px;color:var(--white);line-height:1.7;white-space:pre-wrap;
+}
+.msg-loading{color:var(--muted);font-style:italic;}
+.ai-input-wrap{
+  padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;gap:10px;
+}
+.ai-input{
+  flex:1;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;color:var(--white);
+  font-size:14px;font-family:'Inter',sans-serif;outline:none;
+  transition:border 0.15s;
+}
+.ai-input:focus{border-color:var(--gold);}
+.ai-send{
+  background:var(--gold);color:#000;border:none;border-radius:10px;
+  padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;
+  transition:opacity 0.15s;white-space:nowrap;
+}
+.ai-send:hover{opacity:0.85;}
+.ai-chips-wrap{padding:0 24px 12px;display:flex;gap:8px;flex-wrap:wrap;}
+.ai-chip{
+  font-size:12px;color:var(--muted2);background:var(--bg3);
+  border:1px solid var(--border);border-radius:20px;padding:5px 12px;
+  cursor:pointer;transition:all 0.15s;
+}
+.ai-chip:hover{border-color:var(--gold);color:var(--gold);}
+
+/* TAKVİM VIEW */
+.takvim-view{flex:1;overflow-y:auto;display:none;padding:20px 24px;}
+.takvim-view.active{display:block;}
+.takvim-ay-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.t-ay-tab{
+  font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent;
+}
+.t-ay-tab:hover{border-color:var(--gold);color:var(--gold);}
+.t-ay-tab.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.tk-row{
+  display:grid;grid-template-columns:70px 1fr auto auto;
+  align-items:center;gap:12px;
+  padding:10px 14px;border-radius:8px;margin-bottom:4px;
+  border:1px solid var(--border);background:var(--bg2);
+}
+.tk-row.gecmis{opacity:0.3;}
+.tk-row.yaklasan{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.04);}
+.tk-row.buay{border-color:rgba(201,162,39,0.3);}
+.tk-tarih{font-size:11px;font-weight:700;color:var(--gold);}
+.tk-row.gecmis .tk-tarih{color:var(--muted);}
+.tk-row.yaklasan .tk-tarih{color:var(--green);}
+.tk-aciklama{font-size:12px;color:var(--muted2);}
+.tk-row.gecmis .tk-aciklama{text-decoration:line-through;}
+.tk-tip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+.tk-durum{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
 </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
-      <path d="M4 10 L4 36 L22 40 L22 14 Z" fill="#0F1E33" stroke="#C9A227" stroke-width="1.2"/>
-      <path d="M40 10 L40 36 L22 40 L22 14 Z" fill="#0F1E33" stroke="#C9A227" stroke-width="1.2"/>
-      <path d="M8 12 L8 35 L22 38.5 L22 15.5 Z" fill="white" opacity="0.9"/>
-      <path d="M36 12 L36 35 L22 38.5 L22 15.5 Z" fill="white" opacity="0.9"/>
-      <path d="M22 14 L22 40" stroke="#C9A227" stroke-width="1.5"/>
-      <path d="M12 6 L22 14 L32 6" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      <path d="M14 9 L22 16 L30 9" stroke="#C9A227" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="logo" href="#">
+    <svg viewBox="0 0 44 44" fill="none">
+      <path d="M4 10L4 36L22 40L22 14Z" fill="#0a0f1a" stroke="#c9a227" stroke-width="1.2"/>
+      <path d="M40 10L40 36L22 40L22 14Z" fill="#0a0f1a" stroke="#c9a227" stroke-width="1.2"/>
+      <path d="M8 12L8 35L22 38.5L22 15.5Z" fill="white" opacity="0.9"/>
+      <path d="M36 12L36 35L22 38.5L22 15.5Z" fill="white" opacity="0.9"/>
+      <path d="M22 14L22 40" stroke="#c9a227" stroke-width="1.5"/>
+      <path d="M12 6L22 14L32 6" stroke="#c9a227" stroke-width="2" stroke-linecap="round" fill="none"/>
     </svg>
-    <div class="logo-text"><span class="dub">Dub</span><span class="fin">Fin</span><span class="ai">.ai</span></div>
+    <div class="logo-text">Dub<b>Fin</b><span style="color:var(--muted);font-weight:400;font-size:12px;">.ai</span></div>
+  </a>
+  <div class="topbar-right">
+    <div class="badge"><span class="dot"></span>3 yeni sirküler</div>
+    <div class="date-text" id="tarih-text"></div>
   </div>
-  <nav class="sidebar-nav">
-    <a class="nav-item active" onclick="showView('panel')" href="#">
-      <span class="nav-icon">⊞</span> Ana panel
-    </a>
-    <a class="nav-item" onclick="showView('sirkuler')" href="#">
-      <span class="nav-icon">☰</span> Sirkülerler
-    </a>
-    <a class="nav-item" onclick="showView('asistan')" href="#">
-      <span class="nav-icon">◎</span> AI asistan
-    </a>
-    <a class="nav-item" onclick="showView('takvim')" href="#">
-      <span class="nav-icon">▦</span> Vergi takvimi
-    </a>
-  </nav>
-  <div class="sidebar-footer">TÜRMOB kaynaklı · Günlük güncelleme</div>
-</aside>
+</header>
 
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="page-title">Ana panel</div>
-    <div class="topbar-right">
-      <div class="badge-new" onclick="showView('sirkuler')">
-        <span class="dot"></span>
-        <span>3 yeni sirküler</span>
-      </div>
-      <div class="topbar-date" id="bugun-tarih"></div>
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SOL: SİRKÜLER LİSTESİ -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <span class="panel-title">Sirkülerler</span>
+      <span class="panel-count" id="sirk-count">48</span>
     </div>
+    <div class="cat-tabs" id="cat-tabs">
+      <button class="cat-tab active" onclick="filterKat('tumu')">Tümü</button>
+      <button class="cat-tab" onclick="filterKat('SGK')">SGK</button>
+      <button class="cat-tab" onclick="filterKat('KDV')">KDV</button>
+      <button class="cat-tab" onclick="filterKat('Muhtasar')">Muhtasar</button>
+      <button class="cat-tab" onclick="filterKat('Fatura')">Fatura</button>
+      <button class="cat-tab" onclick="filterKat('Genel')">Genel</button>
+    </div>
+    <div class="sirk-list" id="sirk-list"></div>
   </div>
 
-  <div class="content">
+  <!-- SAĞ: DETAY + AI + TAKVİM -->
+  <div class="right-panel">
+    <div class="view-tabs">
+      <div class="view-tab active" onclick="showTab('detay')">Detay</div>
+      <div class="view-tab" onclick="showTab('ai')">AI Asistan</div>
+      <div class="view-tab" onclick="showTab('takvim')">Vergi Takvimi</div>
+    </div>
 
-    <!-- ANA PANEL -->
-    <div class="view active" id="view-panel">
-      <div class="metrics">
-        <div class="metric-card">
-          <div class="metric-label">📄 Bu ay sirkülerler</div>
-          <div class="metric-value" id="m-buay">—</div>
-          <div class="metric-sub" id="m-ay-adi">Haziran 2026</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">🗃 Bilgi tabanı</div>
-          <div class="metric-value">48</div>
-          <div class="metric-sub">Toplam doküman</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">🕐 Son güncelleme</div>
-          <div class="metric-value" style="font-size:20px;">Bugün 07:00</div>
-          <div class="metric-status status-green">● Güncel</div>
-        </div>
+    <!-- DETAY -->
+    <div class="detay-view active" id="tab-detay">
+      <div class="detay-empty" id="detay-empty">
+        <div class="detay-empty-icon">📋</div>
+        <div style="font-size:15px;font-weight:500;">Bir sirküler seçin</div>
+        <div style="font-size:13px;">Listeden bir sirküler seçerek detaylarını görüntüleyin</div>
       </div>
-
-      <div class="grid-2">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Son sirkülerler</div>
-            <a class="panel-link" onclick="showView('sirkuler')" href="#">Tümü →</a>
-          </div>
-          <div class="panel-body">
-            <div class="sirk-item"><div class="sirk-title">2026/83 — SGK tecil teminatsız tutar 10M TL'ye yükseltildi</div><div class="sirk-meta"><span>Bugün</span><span class="tag tag-sgk">SGK</span></div></div>
-            <div class="sirk-item"><div class="sirk-title">2026/82 — E-fatura zorunluluk eşiği güncellendi</div><div class="sirk-meta"><span>Dün</span><span class="tag tag-fatura">Fatura</span></div></div>
-            <div class="sirk-item"><div class="sirk-title">2026/81 — KDV iade usul ve esasları tebliği</div><div class="sirk-meta"><span>12 Haz</span><span class="tag tag-kdv">KDV</span></div></div>
-            <div class="sirk-item"><div class="sirk-title">2026/80 — Asgari ücret desteği hesaplama esasları</div><div class="sirk-meta"><span>10 Haz</span><span class="tag tag-diger">Genel</span></div></div>
-          </div>
+      <div id="detay-content" style="display:none;">
+        <div class="detay-baslik" id="d-baslik"></div>
+        <div class="detay-meta">
+          <span class="detay-no" id="d-no"></span>
+          <span class="detay-tarih" id="d-tarih"></span>
+          <span class="tag" id="d-tag"></span>
         </div>
-
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Yaklaşan vergi tarihleri</div>
-            <a class="panel-link" onclick="showView('takvim')" href="#">Takvim →</a>
-          </div>
-          <div class="panel-body" id="yaklasan-list"></div>
+        <div class="detay-ozet">
+          <div class="detay-ozet-baslik">Özet</div>
+          <div id="d-ozet"></div>
         </div>
-      </div>
-
-      <div class="ai-panel">
-        <div class="ai-panel-head">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:16px;">◎</span>
-            <span class="ai-panel-title">Mevzuat hakkında anında cevap al — PDF okumana gerek yok</span>
-          </div>
-          <button class="ai-ask-btn" onclick="showView('asistan')">AI asistana sor →</button>
-        </div>
-        <div class="ai-chips">
-          <div class="ai-chip" onclick="showView('asistan')">Araç kiralama gider yazılır mı?</div>
-          <div class="ai-chip" onclick="showView('asistan')">KDV iadesi nasıl alınır?</div>
-          <div class="ai-chip" onclick="showView('asistan')">E-fatura limiti nedir?</div>
-          <div class="ai-chip" onclick="showView('asistan')">SGK borcumu taksitlendirmek istiyorum</div>
-        </div>
+        <div class="detay-metin" id="d-metin"></div>
       </div>
     </div>
 
-    <!-- SİRKÜLERLER -->
-    <div class="view" id="view-sirkuler">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">2026 Sirkülerleri</div>
-          <span style="font-size:12px;color:var(--muted);">48 doküman</span>
-        </div>
-        <div class="panel-body">
-          <div class="sirk-item"><div class="sirk-title">2026/83 — SGK tecil teminatsız tutar 10M TL'ye yükseltildi</div><div class="sirk-meta"><span>15.06.2026</span><span class="tag tag-sgk">SGK</span></div></div>
-          <div class="sirk-item"><div class="sirk-title">2026/82 — E-fatura zorunluluk eşiği güncellendi</div><div class="sirk-meta"><span>14.06.2026</span><span class="tag tag-fatura">Fatura</span></div></div>
-          <div class="sirk-item"><div class="sirk-title">2026/81 — KDV iade usul ve esasları tebliği</div><div class="sirk-meta"><span>12.06.2026</span><span class="tag tag-kdv">KDV</span></div></div>
-          <div class="sirk-item"><div class="sirk-title">2026/80 — Asgari ücret desteği hesaplama esasları</div><div class="sirk-meta"><span>10.06.2026</span><span class="tag tag-diger">Genel</span></div></div>
-          <div class="sirk-item"><div class="sirk-title">2026/79 — Muhtasar beyanname uygulama rehberi</div><div class="sirk-meta"><span>08.06.2026</span><span class="tag tag-muhtasar">Muhtasar</span></div></div>
-          <div class="sirk-item"><div class="sirk-title">2026/78 — Enflasyon düzeltmesi 2026 uygulaması</div><div class="sirk-meta"><span>05.06.2026</span><span class="tag tag-diger">Genel</span></div></div>
-          <div style="padding:14px 18px;text-align:center;font-size:12px;color:var(--muted);">Tüm sirkülerler AI asistana sorulabilir</div>
-        </div>
+    <!-- AI -->
+    <div class="ai-view" id="tab-ai">
+      <div class="ai-messages" id="ai-messages">
+        <div class="msg-a">Merhaba! Ben DubFin AI Asistan. TÜRMOB sirkülerleri hakkında sorularınızı yanıtlıyorum. Her cevabımda sirküler numarası ve tarih belirtirim.</div>
+      </div>
+      <div class="ai-chips-wrap">
+        <div class="ai-chip" onclick="sorChip('SGK tecil teminatsız tutar ne kadar?')">SGK tecil teminatsız tutar?</div>
+        <div class="ai-chip" onclick="sorChip('Asgari ücret 2026 ne kadar?')">Asgari ücret 2026?</div>
+        <div class="ai-chip" onclick="sorChip('Araç kiralama gider yazılır mı?')">Araç kiralama gider?</div>
+        <div class="ai-chip" onclick="sorChip('E-fatura zorunluluk eşiği nedir?')">E-fatura limiti?</div>
+      </div>
+      <div class="ai-input-wrap">
+        <input class="ai-input" id="ai-input" type="text" placeholder="Sorunuzu yazın..."
+          onkeydown="if(event.key==='Enter')sorSoruyu()"/>
+        <button class="ai-send" onclick="sorSoruyu()">Sor →</button>
       </div>
     </div>
 
-    <!-- AI ASISTAN -->
-    <div class="view" id="view-asistan">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">◎ AI Asistan</div>
-          <span style="font-size:11px;color:var(--muted);">TÜRMOB sirkülerlerine dayalı</span>
-        </div>
-        <div class="chat-wrap">
-          <div class="chat-messages" id="chat-messages"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="chat-input" type="text" placeholder="Sorunuzu yazın..."
-              onkeydown="if(event.key==='Enter')sorSoruyu()"/>
-            <button class="chat-btn" onclick="sorSoruyu()">Sor</button>
-          </div>
-        </div>
-      </div>
+    <!-- TAKVİM -->
+    <div class="takvim-view" id="tab-takvim">
+      <div class="takvim-ay-tabs" id="takvim-ay-tabs"></div>
+      <div id="takvim-icerik"></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted);">GİB resmi takvimine göre. Kesin tarihler için <a href="https://gib.gov.tr/vergi-takvimi" target="_blank" style="color:var(--gold);">gib.gov.tr</a></div>
     </div>
-
-    <!-- VERGİ TAKVİMİ -->
-    <div class="view" id="view-takvim">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">▦ 2026 Vergi Takvimi</div>
-          <div style="display:flex;gap:12px;font-size:11px;">
-            <span style="color:var(--green)">● Yaklaşıyor</span>
-            <span style="color:var(--gold)">● Bu ay</span>
-            <span style="color:var(--muted)">● Geçti</span>
-          </div>
-        </div>
-        <div class="ay-tabs" id="ayTabs"></div>
-        <div class="takvim-list" id="takvim-icerik"></div>
-        <div style="padding:12px 18px;font-size:11px;color:var(--muted);border-top:1px solid var(--border2);">
-          ⚠️ GİB resmi takvimine göre hazırlanmıştır. Kesin tarihler için <a href="https://www.gib.gov.tr/vergi-takvimi" target="_blank" style="color:var(--gold);">gib.gov.tr</a> kontrol edilmelidir.
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
 <script>
-// Takvim verisi
+// SİRKÜLER VERİSİ
+var SIRKULER = [
+  {no:"2026/83",baslik:"SGK Tecil İşlemlerinde Teminatsız Tutar 10 Milyon TL'ye Yükseltildi",tarih:"15.06.2026",kat:"SGK",yeni:true,ozet:"SGK borcunu taksitlendirmek istediğinde artık 10 milyon TL'ye kadar teminat vermen gerekmeyecek. Borcun 10 milyon TL'yi aşarsa, aşan kısmın yarısı kadar teminat istenecek.",metin:"13.06.2026 tarihli ve 33279 sayılı Resmi Gazete'de yayımlanan 11414 sayılı Cumhurbaşkanı Kararı ile SGK alacaklarının tecil ve taksitlendirilmesinde teminatsız tutar 1 milyon TL'den 10 milyon TL'ye yükseltilmiştir.\n\n10 milyon TL'ye kadar olan borçlar için teminat aranmayacak, 10 milyon TL'yi aşan borçların aşan kısmının yarısı kadar teminat istenecektir.\n\nDayanağı: 6183 sayılı Kanun madde 48, 5510 sayılı Kanun madde 88"},
+  {no:"2026/82",baslik:"E-Fatura Zorunluluk Eşiği Güncellendi",tarih:"14.06.2026",kat:"Fatura",yeni:true,ozet:"E-fatura ve e-arşiv fatura uygulamasına dahil olma sınırları yeniden belirlendi.",metin:"Gelir İdaresi Başkanlığı tarafından yapılan düzenleme ile e-fatura ve e-arşiv fatura kullanım zorunluluğuna ilişkin ciro eşiği güncellenmiştir.\n\nDüzenleme 01.01.2026 tarihinden itibaren geçerlidir."},
+  {no:"2026/81",baslik:"KDV İade Usul ve Esasları Tebliği",tarih:"12.06.2026",kat:"KDV",yeni:true,ozet:"KDV iade taleplerinde uygulanacak usul ve esaslar yeniden düzenlendi.",metin:"KDV Genel Uygulama Tebliğinde değişiklik yapılarak iade süreçleri sadeleştirilmiş ve hızlandırılmıştır.\n\nNakden iade talepleri için YMM raporuna ilişkin süre ve tutarlar güncellenmiştir."},
+  {no:"2026/80",baslik:"Asgari Ücret Desteği Hesaplama Esasları Açıklandı",tarih:"10.06.2026",kat:"SGK",yeni:false,ozet:"2026 yılı Ocak-Aralık dönemi için sigortalı başına asgari ücret desteği 1.270 TL olarak belirlendi.",metin:"01.01.2026-31.12.2026 döneminde her bir sigortalı için işverene aylık 1.270 TL asgari ücret desteği verilecektir.\n\nDestekten yararlanma şartları ve başvuru süreci sirküler ekinde açıklanmıştır."},
+  {no:"2026/79",baslik:"Muhtasar Beyanname Uygulama Rehberi Yayımlandı",tarih:"08.06.2026",kat:"Muhtasar",yeni:false,ozet:"Muhtasar ve Prim Hizmet Beyannamesi uygulamasına ilişkin güncel rehber yayımlandı.",metin:"GİB tarafından hazırlanan rehber, muhtasar beyannamesinde yapılan son değişiklikleri ve uygulama örneklerini içermektedir."},
+  {no:"2026/78",baslik:"Enflasyon Düzeltmesi 2026 Uygulaması",tarih:"05.06.2026",kat:"Genel",yeni:false,ozet:"2026 yılı enflasyon düzeltmesi uygulamasına ilişkin esaslar belirlendi.",metin:"Vergi Usul Kanunu kapsamında yapılacak enflasyon düzeltmesi uygulamasına ilişkin usul ve esaslar açıklanmıştır."},
+  {no:"2026/53",baslik:"2025 Yılı Yüksek Ücret Gelirlerinin Beyanı",tarih:"23.03.2026",kat:"Genel",yeni:false,ozet:"Tek işverenden alınan ve 4.300.000 TL'yi aşan ücret gelirlerinin beyan edilmesi gerekiyor.",metin:"2025 takvim yılında tek işverenden elde edilen ücret gelirinin 4.300.000 TL'yi aşması halinde yıllık gelir vergisi beyannamesi verilmesi zorunludur."},
+  {no:"2026/36",baslik:"Asgari Ücret 2026 Yılı Uygulaması",tarih:"29.01.2026",kat:"SGK",yeni:false,ozet:"01.01.2026 tarihinden itibaren asgari ücret brüt 33.030 TL, net 28.075,50 TL olarak belirlendi.",metin:"Asgari Ücret Tespit Komisyonu kararı ile 01.01.2026-31.12.2026 döneminde uygulanacak asgari ücret:\n\nBrüt: 33.030 TL\nNet: 28.075,50 TL\nGünlük Brüt: 1.101 TL\n\nSGK tavan matrahı: 297.270 TL\nSGK taban matrahı: 33.030 TL"}
+];
+
 var TAKVIM = {
-  1:[{tarih:"2026-01-23",gun:"23 Oca",aciklama:"Aralık 2025 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-01-23",gun:"23 Oca",aciklama:"Aralık 2025 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-01-26",gun:"26 Oca",aciklama:"Aralık 2025 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-01-31",gun:"31 Oca",aciklama:"Yıllık Gelir Vergisi beyannamesi — 2025 basit usul",tip:"diger"}],
-  2:[{tarih:"2026-02-23",gun:"23 Şub",aciklama:"Ocak 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-02-23",gun:"23 Şub",aciklama:"Ocak 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-02-26",gun:"26 Şub",aciklama:"Ocak 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-02-28",gun:"28 Şub",aciklama:"Yıllık Gelir Vergisi beyannamesi — 2025 gerçek usul",tip:"diger"}],
-  3:[{tarih:"2026-03-23",gun:"23 Mar",aciklama:"Şubat 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-03-23",gun:"23 Mar",aciklama:"Şubat 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-03-26",gun:"26 Mar",aciklama:"Şubat 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-03-31",gun:"31 Mar",aciklama:"Yıllık Gelir Vergisi 1. taksit ödemesi",tip:"diger"},{tarih:"2026-03-31",gun:"31 Mar",aciklama:"Kurumlar Vergisi beyannamesi — 2025 hesap dönemi",tip:"diger"}],
-  4:[{tarih:"2026-04-23",gun:"23 Nis",aciklama:"Mart 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-04-23",gun:"23 Nis",aciklama:"Mart 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-04-25",gun:"25 Nis",aciklama:"Kurumlar Vergisi 1. taksit ödemesi",tip:"diger"},{tarih:"2026-04-26",gun:"26 Nis",aciklama:"Mart 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"}],
-  5:[{tarih:"2026-05-23",gun:"23 May",aciklama:"Nisan 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-05-23",gun:"23 May",aciklama:"Nisan 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-05-26",gun:"26 May",aciklama:"Nisan 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-05-31",gun:"31 May",aciklama:"1. Dönem Geçici Vergi beyannamesi (Oca-Mar 2026)",tip:"gecici"}],
-  6:[{tarih:"2026-06-03",gun:"3 Haz",aciklama:"Mayıs 2026 Muhtasar ve Damga Vergisi — uzatılmış",tip:"muhtasar"},{tarih:"2026-06-05",gun:"5 Haz",aciklama:"Mayıs 2026 KDV beyannamesi — uzatılmış son gün",tip:"kdv"},{tarih:"2026-06-23",gun:"23 Haz",aciklama:"Mayıs 2026 KDV ödemesi",tip:"kdv"},{tarih:"2026-06-25",gun:"25 Haz",aciklama:"1. Dönem Geçici Vergi ödemesi",tip:"gecici"},{tarih:"2026-06-26",gun:"26 Haz",aciklama:"Mayıs 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"}],
-  7:[{tarih:"2026-07-01",gun:"1-20 Tem",aciklama:"Mali Tatil — beyanname süreleri uzar",tip:"tatil"},{tarih:"2026-07-27",gun:"27 Tem",aciklama:"Haziran 2026 KDV beyannamesi ve ödemesi — mali tatil sonrası",tip:"kdv"},{tarih:"2026-07-27",gun:"27 Tem",aciklama:"Haziran 2026 Muhtasar Beyannamesi — mali tatil sonrası",tip:"muhtasar"},{tarih:"2026-07-28",gun:"28 Tem",aciklama:"Haziran 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-07-31",gun:"31 Tem",aciklama:"Yıllık Gelir Vergisi 2. taksit ödemesi",tip:"diger"}],
-  8:[{tarih:"2026-08-23",gun:"23 Agu",aciklama:"Temmuz 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-08-23",gun:"23 Agu",aciklama:"Temmuz 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-08-26",gun:"26 Agu",aciklama:"Temmuz 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-08-31",gun:"31 Agu",aciklama:"2. Dönem Geçici Vergi beyannamesi (Nis-Haz 2026)",tip:"gecici"}],
-  9:[{tarih:"2026-09-23",gun:"23 Eyl",aciklama:"Agustos 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-09-23",gun:"23 Eyl",aciklama:"Agustos 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-09-25",gun:"25 Eyl",aciklama:"Kurumlar Vergisi 2. taksit ödemesi",tip:"diger"},{tarih:"2026-09-25",gun:"25 Eyl",aciklama:"2. Dönem Geçici Vergi ödemesi",tip:"gecici"},{tarih:"2026-09-26",gun:"26 Eyl",aciklama:"Agustos 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"}],
-  10:[{tarih:"2026-10-23",gun:"23 Eki",aciklama:"Eylül 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-10-23",gun:"23 Eki",aciklama:"Eylül 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-10-26",gun:"26 Eki",aciklama:"Eylül 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"}],
-  11:[{tarih:"2026-11-16",gun:"16 Kas",aciklama:"3. Dönem Geçici Vergi beyannamesi (Tem-Eyl 2026)",tip:"gecici"},{tarih:"2026-11-23",gun:"23 Kas",aciklama:"Ekim 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-11-23",gun:"23 Kas",aciklama:"Ekim 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-11-25",gun:"25 Kas",aciklama:"3. Dönem Geçici Vergi ödemesi",tip:"gecici"},{tarih:"2026-11-26",gun:"26 Kas",aciklama:"Ekim 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"}],
-  12:[{tarih:"2026-12-23",gun:"23 Ara",aciklama:"Kasim 2026 KDV beyannamesi ve ödemesi",tip:"kdv"},{tarih:"2026-12-23",gun:"23 Ara",aciklama:"Kasim 2026 Muhtasar ve Prim Hizmet Beyannamesi",tip:"muhtasar"},{tarih:"2026-12-26",gun:"26 Ara",aciklama:"Kasim 2026 SGK bildirgeleri ve prim ödemesi",tip:"sgk"},{tarih:"2026-12-31",gun:"31 Ara",aciklama:"4. Dönem Geçici Vergi beyannamesi (Eki-Ara 2026)",tip:"gecici"}]
+  1:[{t:"2026-01-23",g:"23 Oca",a:"Aralık 2025 KDV beyannamesi",tip:"KDV"},{t:"2026-01-23",g:"23 Oca",a:"Aralık 2025 Muhtasar Beyannamesi",tip:"Muhtasar"},{t:"2026-01-26",g:"26 Oca",a:"Aralık 2025 SGK prim ödemesi",tip:"SGK"},{t:"2026-01-31",g:"31 Oca",a:"Gelir Vergisi — 2025 basit usul",tip:"GV"}],
+  2:[{t:"2026-02-23",g:"23 Şub",a:"Ocak 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-02-23",g:"23 Şub",a:"Ocak 2026 Muhtasar Beyannamesi",tip:"Muhtasar"},{t:"2026-02-26",g:"26 Şub",a:"Ocak 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-02-28",g:"28 Şub",a:"Gelir Vergisi — 2025 gerçek usul",tip:"GV"}],
+  3:[{t:"2026-03-23",g:"23 Mar",a:"Şubat 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-03-23",g:"23 Mar",a:"Şubat 2026 Muhtasar Beyannamesi",tip:"Muhtasar"},{t:"2026-03-26",g:"26 Mar",a:"Şubat 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-03-31",g:"31 Mar",a:"GV 1. taksit ödemesi",tip:"GV"},{t:"2026-03-31",g:"31 Mar",a:"Kurumlar Vergisi beyannamesi",tip:"KV"}],
+  4:[{t:"2026-04-23",g:"23 Nis",a:"Mart 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-04-23",g:"23 Nis",a:"Mart 2026 Muhtasar Beyannamesi",tip:"Muhtasar"},{t:"2026-04-25",g:"25 Nis",a:"Kurumlar Vergisi 1. taksit",tip:"KV"},{t:"2026-04-26",g:"26 Nis",a:"Mart 2026 SGK prim ödemesi",tip:"SGK"}],
+  5:[{t:"2026-05-23",g:"23 May",a:"Nisan 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-05-23",g:"23 May",a:"Nisan 2026 Muhtasar Beyannamesi",tip:"Muhtasar"},{t:"2026-05-26",g:"26 May",a:"Nisan 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-05-31",g:"31 May",a:"1. Dönem Geçici Vergi beyannamesi",tip:"GV"}],
+  6:[{t:"2026-06-03",g:"3 Haz",a:"Mayıs 2026 Muhtasar — uzatılmış",tip:"Muhtasar"},{t:"2026-06-05",g:"5 Haz",a:"Mayıs 2026 KDV — uzatılmış",tip:"KDV"},{t:"2026-06-23",g:"23 Haz",a:"Mayıs 2026 KDV ödemesi",tip:"KDV"},{t:"2026-06-25",g:"25 Haz",a:"1. Dönem Geçici Vergi ödemesi",tip:"GV"},{t:"2026-06-26",g:"26 Haz",a:"Mayıs 2026 SGK prim ödemesi",tip:"SGK"}],
+  7:[{t:"2026-07-01",g:"1-20 Tem",a:"Mali Tatil",tip:"TAT"},{t:"2026-07-27",g:"27 Tem",a:"Haziran 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-07-27",g:"27 Tem",a:"Haziran 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-07-28",g:"28 Tem",a:"Haziran 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-07-31",g:"31 Tem",a:"GV 2. taksit ödemesi",tip:"GV"}],
+  8:[{t:"2026-08-23",g:"23 Agu",a:"Temmuz 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-08-23",g:"23 Agu",a:"Temmuz 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-08-26",g:"26 Agu",a:"Temmuz 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-08-31",g:"31 Agu",a:"2. Dönem Geçici Vergi beyannamesi",tip:"GV"}],
+  9:[{t:"2026-09-23",g:"23 Eyl",a:"Agustos 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-09-23",g:"23 Eyl",a:"Agustos 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-09-25",g:"25 Eyl",a:"Kurumlar Vergisi 2. taksit",tip:"KV"},{t:"2026-09-25",g:"25 Eyl",a:"2. Dönem Geçici Vergi ödemesi",tip:"GV"},{t:"2026-09-26",g:"26 Eyl",a:"Agustos 2026 SGK prim ödemesi",tip:"SGK"}],
+  10:[{t:"2026-10-23",g:"23 Eki",a:"Eylül 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-10-23",g:"23 Eki",a:"Eylül 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-10-26",g:"26 Eki",a:"Eylül 2026 SGK prim ödemesi",tip:"SGK"}],
+  11:[{t:"2026-11-16",g:"16 Kas",a:"3. Dönem Geçici Vergi beyannamesi",tip:"GV"},{t:"2026-11-23",g:"23 Kas",a:"Ekim 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-11-23",g:"23 Kas",a:"Ekim 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-11-25",g:"25 Kas",a:"3. Dönem Geçici Vergi ödemesi",tip:"GV"},{t:"2026-11-26",g:"26 Kas",a:"Ekim 2026 SGK prim ödemesi",tip:"SGK"}],
+  12:[{t:"2026-12-23",g:"23 Ara",a:"Kasim 2026 KDV beyannamesi",tip:"KDV"},{t:"2026-12-23",g:"23 Ara",a:"Kasim 2026 Muhtasar",tip:"Muhtasar"},{t:"2026-12-26",g:"26 Ara",a:"Kasim 2026 SGK prim ödemesi",tip:"SGK"},{t:"2026-12-31",g:"31 Ara",a:"4. Dönem Geçici Vergi beyannamesi",tip:"GV"}]
 };
 
-var TIP_CLASS={kdv:"tag-kdv",sgk:"tag-sgk",muhtasar:"tag-muhtasar",gecici:"tag-muhtasar",diger:"tag-diger",tatil:"tag-diger"};
-var TIP_LABEL={kdv:"KDV",sgk:"SGK",muhtasar:"Muhtasar",gecici:"Geçici V.",diger:"Genel",tatil:"Mali Tatil"};
-var AY_ADI=["Ocak","Subat","Mart","Nisan","Mayis","Haziran","Temmuz","Agustos","Eylül","Ekim","Kasim","Aralik"];
-var AY_KISA=["Oca","Sub","Mar","Nis","May","Haz","Tem","Agu","Eyl","Eki","Kas","Ara"];
+var KAT_TIP = {SGK:"t-sgk",KDV:"t-kdv",Muhtasar:"t-muhtasar",Fatura:"t-fatura",Genel:"t-diger"};
+var AY_ADI = ["Ocak","Subat","Mart","Nisan","Mayis","Haziran","Temmuz","Agustos","Eylul","Ekim","Kasim","Aralik"];
+var AY_KISA = ["Oca","Sub","Mar","Nis","May","Haz","Tem","Agu","Eyl","Eki","Kas","Ara"];
+var TIP_CLS = {KDV:"tag t-kdv",SGK:"tag t-sgk",Muhtasar:"tag t-muhtasar",GV:"tag t-diger",KV:"tag t-fatura",TAT:"tag t-diger"};
 
-var bugun=new Date();bugun.setHours(0,0,0,0);
-var yediGun=new Date(bugun);yediGun.setDate(yediGun.getDate()+7);
-var buAy=bugun.getMonth()+1;
+var bugun = new Date(); bugun.setHours(0,0,0,0);
+var yediGun = new Date(bugun); yediGun.setDate(yediGun.getDate()+7);
+var buAy = bugun.getMonth()+1;
+var aktifKat = 'tumu';
 
-document.getElementById('bugun-tarih').textContent=bugun.getDate()+' '+AY_ADI[bugun.getMonth()]+' '+bugun.getFullYear();
-document.getElementById('m-buay').textContent=buAy===6?'14':'—';
-document.getElementById('m-ay-adi').textContent=AY_ADI[bugun.getMonth()]+' '+bugun.getFullYear();
+// Tarih
+document.getElementById('tarih-text').textContent = bugun.getDate()+' '+AY_ADI[bugun.getMonth()]+' '+bugun.getFullYear();
 
-function yaklasanListeOlustur(){
-  var liste=[];
-  for(var ay=1;ay<=12;ay++){
-    TAKVIM[ay].forEach(function(item){
-      if(item.tip==='tatil')return;
-      var t=new Date(item.tarih);t.setHours(0,0,0,0);
-      if(t>=bugun){
-        var gun=Math.round((t-bugun)/(1000*60*60*24));
-        liste.push({gun:gun,aciklama:item.aciklama.split('—')[0].trim(),tarihStr:item.gun,tip:item.tip});
-      }
-    });
+// Sirkülerleri render et
+function renderSirkuler() {
+  var liste = aktifKat === 'tumu' ? SIRKULER : SIRKULER.filter(function(s){return s.kat === aktifKat;});
+  document.getElementById('sirk-count').textContent = liste.length;
+  var html = '';
+  liste.forEach(function(s, i) {
+    var tipCls = KAT_TIP[s.kat] || 't-diger';
+    html += '<div class="sirk-item" onclick="showDetay('+SIRKULER.indexOf(s)+')">';
+    html += '<div class="sirk-no">'+s.no+(s.yeni?' <span class="yeni-badge">YENİ</span>':'')+'</div>';
+    html += '<div class="sirk-title">'+s.baslik+'</div>';
+    html += '<div class="sirk-meta"><span class="sirk-date">'+s.tarih+'</span><span class="tag '+tipCls+'">'+s.kat+'</span></div>';
+    html += '</div>';
+  });
+  document.getElementById('sirk-list').innerHTML = html;
+}
+
+function filterKat(kat) {
+  aktifKat = kat;
+  document.querySelectorAll('.cat-tab').forEach(function(b){b.classList.remove('active');});
+  event.target.classList.add('active');
+  renderSirkuler();
+}
+
+function showDetay(idx) {
+  var s = SIRKULER[idx];
+  showTab('detay');
+  document.getElementById('detay-empty').style.display = 'none';
+  document.getElementById('detay-content').style.display = 'block';
+  document.getElementById('d-baslik').textContent = s.baslik;
+  document.getElementById('d-no').textContent = s.no;
+  document.getElementById('d-tarih').textContent = s.tarih;
+  var tipCls = KAT_TIP[s.kat] || 't-diger';
+  document.getElementById('d-tag').className = 'tag '+tipCls;
+  document.getElementById('d-tag').textContent = s.kat;
+  document.getElementById('d-ozet').textContent = s.ozet;
+  document.getElementById('d-metin').textContent = s.metin;
+  document.querySelectorAll('.sirk-item').forEach(function(el,i){
+    el.classList.toggle('active', SIRKULER.indexOf(s) === i || false);
+  });
+}
+
+// Tab yönetimi
+function showTab(tab) {
+  document.querySelectorAll('.detay-view, .ai-view, .takvim-view').forEach(function(v){
+    v.classList.remove('active');
+  });
+  document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+tab).classList.add('active');
+  var tabs = document.querySelectorAll('.view-tab');
+  var idx = {detay:0,ai:1,takvim:2}[tab];
+  if(tabs[idx]) tabs[idx].classList.add('active');
+}
+
+// Takvim
+function initTakvim() {
+  var tabsEl = document.getElementById('takvim-ay-tabs');
+  for(var i=1;i<=12;i++){
+    var btn = document.createElement('button');
+    btn.className = 't-ay-tab' + (i===buAy?' active':'');
+    btn.textContent = AY_KISA[i-1];
+    btn.onclick = (function(ay){return function(){
+      document.querySelectorAll('.t-ay-tab').forEach(function(b){b.classList.remove('active');});
+      event.target.classList.add('active');
+      renderTakvim(ay);
+    };})(i);
+    tabsEl.appendChild(btn);
   }
-  liste.sort(function(a,b){return a.gun-b.gun;});
-  var el=document.getElementById('yaklasan-list');
-  el.innerHTML='';
-  liste.slice(0,5).forEach(function(item){
-    var cls=item.gun<=7?'gun-yesil':item.gun<=30?'gun-sari':'gun-mavi';
-    var label=item.gun===0?'Bugün':item.gun===1?'Yarın':item.gun+' gün';
-    el.innerHTML+='<div class="vergi-item"><span class="t-tarih" style="font-size:11px;min-width:52px;">'+item.tarihStr+'</span><span class="vergi-name">'+item.aciklama+'</span><span class="gun-badge '+cls+'">'+label+'</span></div>';
-  });
-}
-yaklasanListeOlustur();
-
-var tabsEl=document.getElementById('ayTabs');
-for(var i=1;i<=12;i++){
-  var btn=document.createElement('button');
-  btn.className='ay-tab'+(i===buAy?' active':'');
-  btn.textContent=AY_KISA[i-1];
-  btn.onclick=(function(ay){return function(){showAy(ay);};})(i);
-  tabsEl.appendChild(btn);
+  renderTakvim(buAy);
 }
 
-function showAy(n){
-  document.querySelectorAll('.ay-tab').forEach(function(b,i){b.classList.toggle('active',i+1===n);});
-  var ic=document.getElementById('takvim-icerik');
-  ic.innerHTML='';
+function renderTakvim(n) {
+  var ic = document.getElementById('takvim-icerik');
+  ic.innerHTML = '';
   TAKVIM[n].forEach(function(item){
-    var t=new Date(item.tarih);t.setHours(0,0,0,0);
-    var cls='takvim-row';
-    var durumHtml='';
-    if(item.tip==='tatil'){
-      cls+=' buay';
-      durumHtml='<span class="t-durum" style="background:rgba(246,173,85,0.15);color:#F6AD55;">Tatil</span>';
+    var t = new Date(item.t); t.setHours(0,0,0,0);
+    var cls = 'tk-row';
+    var durumHtml = '';
+    if(item.tip==='TAT'){
+      cls += ' buay';
+      durumHtml = '<span class="tk-durum" style="background:var(--amber2);color:var(--amber);">Tatil</span>';
     } else if(t<bugun){
-      cls+=' gecmis';
-      durumHtml='<span class="t-durum" style="background:rgba(138,155,176,0.1);color:var(--muted);">Geçti</span>';
+      cls += ' gecmis';
+      durumHtml = '<span class="tk-durum" style="background:var(--bg3);color:var(--muted);">Geçti</span>';
     } else if(t<=yediGun){
-      cls+=' yaklasan';
-      durumHtml='<span class="t-durum" style="background:var(--green-dim);color:var(--green);font-weight:700;">'+Math.round((t-bugun)/86400000)+' gün</span>';
+      cls += ' yaklasan';
+      var kalan = Math.round((t-bugun)/86400000);
+      durumHtml = '<span class="tk-durum" style="background:var(--green2);color:var(--green);">'+(kalan===0?'Bugün':kalan+' gün')+'</span>';
     } else {
-      var ayFark=(t.getFullYear()-bugun.getFullYear())*12+t.getMonth()-bugun.getMonth();
-      if(ayFark===0){cls+=' buay';durumHtml='<span class="t-durum" style="background:var(--gold-dim);color:var(--gold);">Bu ay</span>';}
-      else{durumHtml='<span class="t-durum" style="background:rgba(99,179,237,0.1);color:var(--blue);">Gelecek</span>';}
+      var ayFark = (t.getFullYear()-bugun.getFullYear())*12+t.getMonth()-bugun.getMonth();
+      if(ayFark===0){cls+=' buay';durumHtml='<span class="tk-durum" style="background:var(--gold2);color:var(--gold);">Bu ay</span>';}
+      else{durumHtml='<span class="tk-durum" style="background:var(--bg3);color:var(--blue);">Gelecek</span>';}
     }
-    ic.innerHTML+='<div class="'+cls+'"><span class="t-tarih">'+item.gun+'</span><span class="t-aciklama">'+item.aciklama+'</span><span class="t-tip '+TIP_CLASS[item.tip]+'">'+TIP_LABEL[item.tip]+'</span>'+durumHtml+'</div>';
+    var tipCls = TIP_CLS[item.tip] || 'tag t-diger';
+    ic.innerHTML += '<div class="'+cls+'"><span class="tk-tarih">'+item.g+'</span><span class="tk-aciklama">'+item.a+'</span><span class="'+tipCls+'">'+item.tip+'</span>'+durumHtml+'</div>';
   });
 }
-showAy(buAy);
 
-var titles={panel:'Ana panel',sirkuler:'Sirkülerler',asistan:'AI Asistan',takvim:'Vergi Takvimi'};
-function showView(id){
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  document.getElementById('view-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(function(n){
-    if(n.getAttribute('onclick')&&n.getAttribute('onclick').indexOf("'"+id+"'")>-1)n.classList.add('active');
-  });
-  document.getElementById('page-title').textContent=titles[id]||id;
+// AI Asistan
+function sorChip(soru) {
+  document.getElementById('ai-input').value = soru;
+  sorSoruyu();
 }
 
-async function sorSoruyu(){
-  var input=document.getElementById('chat-input');
-  var messages=document.getElementById('chat-messages');
-  var soru=input.value.trim();
-  if(!soru)return;
-  input.value='';
+async function sorSoruyu() {
+  var input = document.getElementById('ai-input');
+  var messages = document.getElementById('ai-messages');
+  var soru = input.value.trim();
+  if(!soru) return;
+  input.value = '';
 
-  var soruDiv=document.createElement('div');
-  soruDiv.className='msg-kullanici';
-  soruDiv.textContent=soru;
+  var soruDiv = document.createElement('div');
+  soruDiv.className = 'msg-u';
+  soruDiv.textContent = soru;
   messages.appendChild(soruDiv);
 
-  var cevapDiv=document.createElement('div');
-  cevapDiv.className='msg-ai';
-  cevapDiv.textContent='Yanıt hazırlanıyor...';
+  var cevapDiv = document.createElement('div');
+  cevapDiv.className = 'msg-a msg-loading';
+  cevapDiv.textContent = 'Yanıt hazırlanıyor...';
   messages.appendChild(cevapDiv);
-  messages.scrollTop=messages.scrollHeight;
+  messages.scrollTop = messages.scrollHeight;
 
-  try{
-    var res=await fetch('/.netlify/functions/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({soru:soru})
+  try {
+    var res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({soru: soru})
     });
-    var data=await res.json();
-    cevapDiv.textContent=data.cevap||data.hata||'Bir hata oluştu.';
-    messages.scrollTop=messages.scrollHeight;
-  }catch(e){
-    cevapDiv.textContent='Bağlantı hatası: '+e.message;
+    var data = await res.json();
+    cevapDiv.className = 'msg-a';
+    cevapDiv.textContent = data.cevap || data.hata || 'Bir hata oluştu.';
+    messages.scrollTop = messages.scrollHeight;
+  } catch(e) {
+    cevapDiv.className = 'msg-a';
+    cevapDiv.textContent = 'Bağlantı hatası: ' + e.message;
   }
 }
+
+// BAŞLAT
+renderSirkuler();
+initTakvim();
 </script>
 </body>
 </html>
