@@ -439,8 +439,15 @@ async function sorSoruyu() {
   if (!soru) return;
   input.value = '';
 
-  messages.innerHTML += `<div style="align-self:flex-end;background:var(--gold);color:var(--navy);padding:10px 14px;border-radius:12px;max-width:80%;font-size:14px;">${soru}</div>`;
-  messages.innerHTML += `<div id="yukleniyor" style="align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;">Yanıt hazırlanıyor...</div>`;
+  const soruDiv = document.createElement('div');
+  soruDiv.style.cssText = 'align-self:flex-end;background:var(--gold);color:var(--navy);padding:10px 14px;border-radius:12px;max-width:80%;font-size:14px;';
+  soruDiv.textContent = soru;
+  messages.appendChild(soruDiv);
+
+  const cevapDiv = document.createElement('div');
+  cevapDiv.style.cssText = 'align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;max-width:80%;';
+  cevapDiv.textContent = 'Yanıt hazırlanıyor...';
+  messages.appendChild(cevapDiv);
   messages.scrollTop = messages.scrollHeight;
 
   try {
@@ -450,15 +457,12 @@ async function sorSoruyu() {
       body: JSON.stringify({soru})
     });
     const data = await res.json();
-    document.getElementById('yukleniyor').textContent = data.cevap || data.hata;
+    cevapDiv.textContent = data.cevap || data.hata || 'Bir hata oluştu.';
     messages.scrollTop = messages.scrollHeight;
   } catch(e) {
-    document.getElementById('yukleniyor').textContent = 'Bağlantı hatası, tekrar deneyin.';
+    cevapDiv.textContent = 'Bağlantı hatası: ' + e.message;
   }
 }
-</script>
-      </div>
-    </div>
 
     <!-- TAKVİM VIEW -->
     <div class="view" id="view-takvim">
