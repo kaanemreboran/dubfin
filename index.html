@@ -460,9 +460,11 @@ async function sorSoruyu() {
     cevapDiv.textContent = data.cevap || data.hata || 'Bir hata oluştu.';
     messages.scrollTop = messages.scrollHeight;
   } catch(e) {
+   } catch(e) {
     cevapDiv.textContent = 'Bağlantı hatası: ' + e.message;
   }
 }
+</script>
 
     <!-- TAKVİM VIEW -->
     <div class="view" id="view-takvim">
