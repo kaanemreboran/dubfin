@@ -34,12 +34,12 @@ exports.handler = async (event) => {
 
     if (error) throw new Error(error.message);
 
-    const baglam = sirkulerler
+    const baglam = (sirkulerler || [])
       .map(s => `Sirküler ${s.sirkuler_no} (${s.tarih}):\n${s.metin}`)
       .join('\n\n---\n\n');
 
     const cevap = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -61,6 +61,7 @@ ${baglam}`,
         },
         { role: 'user', content: soru },
       ],
+      max_tokens: 500,
     });
 
     return {
