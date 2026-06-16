@@ -419,9 +419,44 @@ body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text);min
           <div class="panel-title">◎ AI Asistan</div>
           <span style="font-size:11px;color:var(--muted);">TÜRMOB sirkülerlerine dayalı</span>
         </div>
-        <div class="chat-iframe-wrap">
-          <iframe src="https://udify.app/chatbot/dtOcuQ1bJ3LuZiqT" allow="microphone"></iframe>
-        </div>
+       <div class="chat-iframe-wrap" style="padding:16px;">
+  <div id="chat-messages" style="height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:12px;"></div>
+  <div style="display:flex;gap:8px;">
+    <input id="chat-input" type="text" placeholder="Sorunuzu yazın..." 
+      style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--white);font-size:14px;"
+      onkeydown="if(event.key==='Enter')sorSoruyu()"/>
+    <button onclick="sorSoruyu()" 
+      style="padding:10px 20px;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">
+      Sor
+    </button>
+  </div>
+</div>
+<script>
+async function sorSoruyu() {
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('chat-messages');
+  const soru = input.value.trim();
+  if (!soru) return;
+  input.value = '';
+
+  messages.innerHTML += `<div style="align-self:flex-end;background:var(--gold);color:var(--navy);padding:10px 14px;border-radius:12px;max-width:80%;font-size:14px;">${soru}</div>`;
+  messages.innerHTML += `<div id="yukleniyor" style="align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;">Yanıt hazırlanıyor...</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({soru})
+    });
+    const data = await res.json();
+    document.getElementById('yukleniyor').textContent = data.cevap || data.hata;
+    messages.scrollTop = messages.scrollHeight;
+  } catch(e) {
+    document.getElementById('yukleniyor').textContent = 'Bağlantı hatası, tekrar deneyin.';
+  }
+}
+</script>
       </div>
     </div>
 
