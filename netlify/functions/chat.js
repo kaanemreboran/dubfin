@@ -68,7 +68,7 @@ ${baglam}`,
       headers,
       body: JSON.stringify({ cevap: cevap.choices[0].message.content }),
     };
-  } catch (hata) = {
+  } catch (hata) {
     return {
       statusCode: 500,
       headers,
