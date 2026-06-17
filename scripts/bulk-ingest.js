@@ -2,7 +2,6 @@ name: TÜRMOB Sirküler Otomatik İngestion
 
 on:
   schedule:
-    # Her gün 04:00 UTC = 07:00 TR saati
     - cron: '0 4 * * *'
   workflow_dispatch:
     inputs:
