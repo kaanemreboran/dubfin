@@ -59,14 +59,19 @@ async function zatenVarMi(uuid) {
 
 async function pdfdenMetinCikar(uuid) {
   const pdfUrl = `https://www.turmob.org.tr/ekutuphane/Read/${uuid}`;
-  const res = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
-    method: 'POST',
-    headers: { 'x-api-key': PDFCO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: pdfUrl, inline: true, async: false }),
+  
+  const res = await fetch(pdfUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0' }
   });
-  const veri = await res.json();
-  if (veri.error) throw new Error(`PDF.co hatası: ${veri.message}`);
-  return veri.body || '';
+
+  const text = await res.text();
+  
+  // PDF binary ise boş dön, text ise direkt kullan
+  if (text.includes('%PDF')) {
+    throw new Error('Binary PDF - PDF.co gerekli');
+  }
+  
+  return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 async function embeddingUret(metin) {
