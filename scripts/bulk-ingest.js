@@ -22,7 +22,7 @@ async function tumSirkulerleriCek() {
     const html = await res.text();
 
     // ekutuphane/detailPdf UUID'lerini çek
-    const uuidRegex = /ekutuphane\/detailPdf\/([a-f0-9-]{36})/g;
+    const uuidRegex = /\/detailPdf\/([a-f0-9-]{36})/g;
     let eslesme;
     let yeniVarMi = false;
 
