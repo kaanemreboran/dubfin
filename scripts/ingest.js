@@ -92,33 +92,18 @@ async function supabaseKaydet(url, metin, embedding) {
 async function main() {
   console.log('🚀 DubFin ingestion başladı:', new Date().toISOString());
 
-  const sirkulerler = await turMobSirkulerleriniCek();
-  if (sirkulerler.length === 0) {
-    console.log('📭 Bugün yeni sirküler yok.');
+  const testUrl = 'https://www.turmob.org.tr/sirkuler/detailPdf/84d3f9ee-db7b-44f8-a736-23a90c83ea24/2026-yilinda-uygulanacak-veraset-ve-intikal-vergisi-tarifesi-ve-istisna-tutarlari-';
+
+  console.log('Test URL deneniyor:', testUrl);
+
+  const metin = await pdfdenMetinCikar(testUrl);
+  if (!metin || metin.length < 50) {
+    console.log('⚠️ Metin çıkarılamadı');
     return;
   }
 
-  let yeniSayisi = 0;
-  for (const url of sirkulerler) {
-    try {
-      if (await zatenVarMi(url)) {
-        console.log(`⏭️  Zaten mevcut: ${url}`);
-        continue;
-      }
-      const metin = await pdfdenMetinCikar(url);
-      if (!metin || metin.length < 50) {
-        console.log(`⚠️  Metin çıkarılamadı: ${url}`);
-        continue;
-      }
-      const embedding = await embeddingUret(metin);
-      await supabaseKaydet(url, metin, embedding);
-      yeniSayisi++;
-      await new Promise(r => setTimeout(r, 2000));
-    } catch (hata) {
-      console.error(`❌ Hata (${url}):`, hata.message);
-    }
-  }
-  console.log(`✅ Tamamlandı. ${yeniSayisi} yeni sirküler eklendi.`);
+  console.log(`✅ Metin çıkarıldı: ${metin.substring(0, 200)}...`);
+  console.log(`Toplam karakter: ${metin.length}`);
 }
 
 main().catch(console.error);
