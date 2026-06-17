@@ -8,10 +8,7 @@ const PDFCO_API_KEY  = process.env.PDFCO_API_KEY;
 const SUPABASE_URL   = process.env.SUPABASE_URL;
 const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_KEY;
 
-const AY_IDLERI = {
-  '2026-06': '302b3a2e-b95b-49c5-81ab-a5c5ac57a9ed',
-};
-
+// Bugünün tarihini YYYY-MM formatında döndürür
 function bugununkiAyKey() {
   const now = new Date();
   const yil = now.getFullYear();
@@ -19,29 +16,33 @@ function bugununkiAyKey() {
   return `${yil}-${ay}`;
 }
 
-async function turMobSirkulerleriniCek(ayId) {
-  const turMobUrl = `https://www.turmob.org.tr/turmob/sirkuler?categoryId=${ayId}`;
-  const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(turMobUrl)}`;
+// TÜRMOB sirküler listesini çek, bu ay yayınlananları filtrele
+async function turMobSirkulerleriniCek() {
+  const turMobUrl = `https://www.turmob.org.tr/Sirkuler`;
+  const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(turMobUrl)}&render=true`;
 
   console.log(`TÜRMOB'dan çekiliyor: ${turMobUrl}`);
   const res  = await fetch(scraperUrl);
   const html = await res.text();
 
-  const pdfLinkRegex = /href="(\/.*?\.pdf)"/g;
+  // detailPdf linklerini çek
+  const linkRegex = /href="(\/sirkuler\/detailPdf\/[^"]+)"/g;
   const linkler = [];
   let eslesme;
-  while ((eslesme = pdfLinkRegex.exec(html)) !== null) {
+
+  while ((eslesme = linkRegex.exec(html)) !== null) {
     const tamUrl = `https://www.turmob.org.tr${eslesme[1]}`;
     if (!linkler.includes(tamUrl)) linkler.push(tamUrl);
   }
 
-  console.log(`${linkler.length} PDF linki bulundu`);
+  console.log(`${linkler.length} sirküler linki bulundu`);
   return linkler;
 }
 
-async function zatenVarMi(pdfUrl) {
+// Supabase'de zaten var mı?
+async function zatenVarMi(url) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(pdfUrl)}&select=id`,
+    `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(url)}&select=id`,
     {
       headers: {
         'apikey': SUPABASE_KEY,
@@ -53,21 +54,28 @@ async function zatenVarMi(pdfUrl) {
   return Array.isArray(data) && data.length > 0;
 }
 
-async function pdfdenMetinCikar(pdfUrl) {
-  console.log(`PDF metin çıkarılıyor: ${pdfUrl}`);
+// PDF.co ile sirküler sayfasından metin çıkar
+async function pdfdenMetinCikar(sirkulerUrl) {
+  console.log(`Metin çıkarılıyor: ${sirkulerUrl}`);
+
+  // detailPdf URL'sini direkt PDF olarak gönder
+  const pdfUrl = sirkulerUrl.replace('/sirkuler/detailPdf/', '/sirkuler/pdf/');
+
   const res = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
     method: 'POST',
     headers: {
       'x-api-key': PDFCO_API_KEY,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ url: pdfUrl, inline: true, async: false }),
+    body: JSON.stringify({ url: sirkulerUrl, inline: true, async: false }),
   });
+
   const veri = await res.json();
   if (veri.error) throw new Error(`PDF.co hatası: ${veri.message}`);
   return veri.body || '';
 }
 
+// OpenAI embedding üret
 async function embeddingUret(metin) {
   const res = await openai.embeddings.create({
     model: 'text-embedding-3-small',
@@ -76,12 +84,9 @@ async function embeddingUret(metin) {
   return res.data[0].embedding;
 }
 
-async function supabaseKaydet(pdfUrl, metin, embedding) {
-  const tarihRegex = /(\d{4})[-_](\d{2})/;
-  const eslesti = pdfUrl.match(tarihRegex);
-  const tarih = eslesti
-    ? `${eslesti[1]}-${eslesti[2]}-01`
-    : new Date().toISOString().split('T')[0];
+// Supabase REST API ile kaydet
+async function supabaseKaydet(url, metin, embedding) {
+  const bugun = new Date().toISOString().split('T')[0];
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
@@ -92,62 +97,55 @@ async function supabaseKaydet(pdfUrl, metin, embedding) {
       'Prefer': 'return=minimal',
     },
     body: JSON.stringify({
-      sirkuler_no: pdfUrl,
-      tarih:       tarih,
+      sirkuler_no: url,
+      tarih:       bugun,
       metin:       metin,
       embedding:   embedding,
     }),
   });
 
   if (!res.ok) {
-    const hataMetin = await res.text();
-    throw new Error(`Supabase kayıt hatası: ${hataMetin}`);
+    const hata = await res.text();
+    throw new Error(`Supabase kayıt hatası: ${hata}`);
   }
 
-  console.log(`✅ Kaydedildi: ${pdfUrl}`);
+  console.log(`✅ Kaydedildi: ${url}`);
 }
 
+// Ana fonksiyon
 async function main() {
   console.log('🚀 DubFin ingestion başladı:', new Date().toISOString());
 
-  const ayKey = bugununkiAyKey();
-  const ayId  = AY_IDLERI[ayKey];
+  const sirkulerler = await turMobSirkulerleriniCek();
 
-  if (!ayId) {
-    console.log(`⚠️  ${ayKey} için ay ID'si tanımlanmamış. Çıkılıyor.`);
-    return;
-  }
-
-  const pdfLinkleri = await turMobSirkulerleriniCek(ayId);
-
-  if (pdfLinkleri.length === 0) {
-    console.log('📭 Yeni sirküler bulunamadı.');
+  if (sirkulerler.length === 0) {
+    console.log('📭 Sirküler linki bulunamadı.');
     return;
   }
 
   let yeniSayisi = 0;
 
-  for (const pdfUrl of pdfLinkleri) {
+  for (const url of sirkulerler) {
     try {
-      if (await zatenVarMi(pdfUrl)) {
-        console.log(`⏭️  Zaten mevcut: ${pdfUrl}`);
+      if (await zatenVarMi(url)) {
+        console.log(`⏭️  Zaten mevcut: ${url}`);
         continue;
       }
 
-      const metin = await pdfdenMetinCikar(pdfUrl);
+      const metin = await pdfdenMetinCikar(url);
       if (!metin || metin.length < 50) {
-        console.log(`⚠️  Metin çıkarılamadı: ${pdfUrl}`);
+        console.log(`⚠️  Metin çıkarılamadı: ${url}`);
         continue;
       }
 
       const embedding = await embeddingUret(metin);
-      await supabaseKaydet(pdfUrl, metin, embedding);
+      await supabaseKaydet(url, metin, embedding);
       yeniSayisi++;
 
       await new Promise(r => setTimeout(r, 2000));
 
     } catch (hata) {
-      console.error(`❌ Hata (${pdfUrl}):`, hata.message);
+      console.error(`❌ Hata (${url}):`, hata.message);
     }
   }
 
