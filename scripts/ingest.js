@@ -4,7 +4,11 @@ import fetch from 'node-fetch';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_SERVICE_KEY,
+  {
+    auth: { persistSession: false },
+    realtime: { enabled: false },
+  }
 );
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
