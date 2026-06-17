@@ -1,4 +1,3 @@
-import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import OpenAI from 'openai';
 import fetch from 'node-fetch';
 
@@ -41,7 +40,6 @@ async function aySirkulerleriniCek(ay) {
     }
 
     console.log(`${ay.ad} - Sayfa ${sayfa}: ${uuidler.length} sirküler`);
-
     if (!yeniVarMi) break;
     await new Promise(r => setTimeout(r, 1000));
   }
@@ -73,9 +71,21 @@ async function pdfdenMetinCikar(uuid) {
 
   // PDF binary mi?
   if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-    // Gerçek PDF — pdf-parse ile oku
-    const data = await pdfParse(Buffer.from(buffer));
-    return data.text.replace(/\s+/g, ' ').trim();
+    const str = new TextDecoder('latin1').decode(buffer);
+    const metinler = [];
+    const regex = /BT[\s\S]*?ET/g;
+    let eslesme;
+    while ((eslesme = regex.exec(str)) !== null) {
+      const blok = eslesme[0];
+      const tjRegex = /\(([^)]+)\)\s*Tj/g;
+      let tj;
+      while ((tj = tjRegex.exec(blok)) !== null) {
+        metinler.push(tj[1]);
+      }
+    }
+    const sonuc = metinler.join(' ').replace(/\s+/g, ' ').trim();
+    if (sonuc.length > 50) return sonuc;
+    return str.replace(/[^\x20-\x7E\u00C0-\u024F]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   // Düz metin
@@ -83,12 +93,18 @@ async function pdfdenMetinCikar(uuid) {
   return metin.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+async function embeddingUret(metin) {
+  const res = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: metin.substring(0, 8000),
+  });
+  return res.data[0].embedding;
+}
+
 async function supabaseKaydet(uuid, metin, embedding, ay) {
   const tarih = `${ay.yil}-${ay.ay}-01`;
   const url   = `https://www.turmob.org.tr/ekutuphane/detailPdf/${uuid}/sirkuler`;
-
-  // Benzersiz ID olarak UUID'nin ilk 8 karakterini sayıya çevir
-  const id = parseInt(uuid.replace(/-/g, '').substring(0, 8), 16) % 2147483647;
+  const id    = parseInt(uuid.replace(/-/g, '').substring(0, 8), 16) % 2147483647;
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
