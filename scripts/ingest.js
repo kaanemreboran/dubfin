@@ -8,9 +8,7 @@ const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const GOOGLE_API_KEY   = process.env.GOOGLE_API_KEY;
 const GOOGLE_SEARCH_CX = process.env.GOOGLE_SEARCH_CX;
 
-// Google Custom Search ile bugün yayınlanan sirkülerleri bul
 async function turMobSirkulerleriniCek() {
-  // Bugünün tarihini GG/AA/YYYY formatında al
   const bugun = new Date();
   const gun   = String(bugun.getDate()).padStart(2, '0');
   const ay    = String(bugun.getMonth() + 1).padStart(2, '0');
@@ -37,7 +35,6 @@ async function turMobSirkulerleriniCek() {
   return linkler;
 }
 
-// Supabase'de var mı?
 async function zatenVarMi(url) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(url)}&select=id`,
@@ -47,20 +44,28 @@ async function zatenVarMi(url) {
   return Array.isArray(data) && data.length > 0;
 }
 
-// PDF.co ile metin çıkar
 async function pdfdenMetinCikar(sirkulerUrl) {
   console.log(`Metin çıkarılıyor: ${sirkulerUrl}`);
+
+  const uuidRegex = /detailPdf\/([a-f0-9-]{36})/;
+  const eslesme = sirkulerUrl.match(uuidRegex);
+  if (!eslesme) throw new Error(`UUID çıkarılamadı: ${sirkulerUrl}`);
+
+  const uuid = eslesme[1];
+  const pdfUrl = `https://www.turmob.org.tr/ekutuphane/Read/${uuid}`;
+  console.log(`PDF URL: ${pdfUrl}`);
+
   const res = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
     method: 'POST',
     headers: { 'x-api-key': PDFCO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: sirkulerUrl, inline: true, async: false }),
+    body: JSON.stringify({ url: pdfUrl, inline: true, async: false }),
   });
+
   const veri = await res.json();
   if (veri.error) throw new Error(`PDF.co hatası: ${veri.message}`);
   return veri.body || '';
 }
 
-// OpenAI embedding
 async function embeddingUret(metin) {
   const res = await openai.embeddings.create({
     model: 'text-embedding-3-small',
@@ -69,7 +74,6 @@ async function embeddingUret(metin) {
   return res.data[0].embedding;
 }
 
-// Supabase'e kaydet
 async function supabaseKaydet(url, metin, embedding) {
   const bugun = new Date().toISOString().split('T')[0];
   const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
@@ -95,8 +99,8 @@ async function main() {
   const testUrl = 'https://www.turmob.org.tr/sirkuler/detailPdf/84d3f9ee-db7b-44f8-a736-23a90c83ea24/2026-yilinda-uygulanacak-veraset-ve-intikal-vergisi-tarifesi-ve-istisna-tutarlari-';
 
   console.log('Test URL deneniyor:', testUrl);
-
   const metin = await pdfdenMetinCikar(testUrl);
+
   if (!metin || metin.length < 50) {
     console.log('⚠️ Metin çıkarılamadı');
     return;
