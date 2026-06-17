@@ -1,143 +1,60 @@
-import OpenAI from 'openai';
-import fetch from 'node-fetch';
+name: TÜRMOB Sirküler Otomatik İngestion
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const PDFCO_API_KEY    = process.env.PDFCO_API_KEY;
-const SUPABASE_URL     = process.env.SUPABASE_URL;
-const SUPABASE_KEY     = process.env.SUPABASE_SERVICE_KEY;
-const GOOGLE_API_KEY   = process.env.GOOGLE_API_KEY;
-const GOOGLE_SEARCH_CX = process.env.GOOGLE_SEARCH_CX;
+on:
+  schedule:
+    # Her gün 04:00 UTC = 07:00 TR saati
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      mod:
+        description: 'Çalışma modu'
+        required: true
+        default: 'gunluk'
+        type: choice
+        options:
+          - gunluk
+          - toplu
 
-// Google'dan tüm 2026 sirküleri çek (sayfalandırmalı)
-async function tumSirkulerleriCek() {
-  const sorgu = 'site:turmob.org.tr/sirkuler/detailPdf 2026';
-  const linkler = [];
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
 
-  // Google max 10 sonuç/sayfa, max 10 sayfa = 100 sonuç
-  for (let baslangic = 1; baslangic <= 91; baslangic += 10) {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_SEARCH_CX}&q=${encodeURIComponent(sorgu)}&num=10&start=${baslangic}`;
+    steps:
+      - name: Repo'yu çek
+        uses: actions/checkout@v4
 
-    console.log(`Google sayfa çekiliyor: start=${baslangic}`);
-    const res  = await fetch(url);
-    const veri = await res.json();
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    if (!veri.items || veri.items.length === 0) {
-      console.log('Daha fazla sonuç yok.');
-      break;
-    }
+      - name: Bağımlılıkları yükle
+        run: |
+          cd scripts
+          npm install
 
-    for (const item of veri.items) {
-      if (item.link.includes('/sirkuler/detailPdf/') && !linkler.includes(item.link)) {
-        linkler.push(item.link);
-      }
-    }
+      - name: Günlük sirküler çek
+        if: ${{ github.event.inputs.mod == 'gunluk' || github.event_name == 'schedule' }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PDFCO_API_KEY: ${{ secrets.PDFCO_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
+        run: |
+          cd scripts
+          node ingest.js
 
-    // API limitini aşmamak için bekle
-    await new Promise(r => setTimeout(r, 1000));
-  }
-
-  console.log(`Toplam ${linkler.length} sirküler bulundu`);
-  return linkler;
-}
-
-async function zatenVarMi(url) {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(url)}&select=id`,
-    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-  );
-  const data = await res.json();
-  return Array.isArray(data) && data.length > 0;
-}
-
-async function pdfdenMetinCikar(sirkulerUrl) {
-  const uuidRegex = /detailPdf\/([a-f0-9-]{36})/;
-  const eslesme = sirkulerUrl.match(uuidRegex);
-  if (!eslesme) throw new Error(`UUID çıkarılamadı: ${sirkulerUrl}`);
-
-  const uuid   = eslesme[1];
-  const pdfUrl = `https://www.turmob.org.tr/ekutuphane/Read/${uuid}`;
-  console.log(`PDF okunuyor: ${pdfUrl}`);
-
-  const res = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
-    method: 'POST',
-    headers: { 'x-api-key': PDFCO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: pdfUrl, inline: true, async: false }),
-  });
-
-  const veri = await res.json();
-  if (veri.error) throw new Error(`PDF.co hatası: ${veri.message}`);
-  return veri.body || '';
-}
-
-async function embeddingUret(metin) {
-  const res = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: metin.substring(0, 8000),
-  });
-  return res.data[0].embedding;
-}
-
-async function supabaseKaydet(url, metin, embedding) {
-  const bugun = new Date().toISOString().split('T')[0];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify({ sirkuler_no: url, tarih: bugun, metin, embedding }),
-  });
-  if (!res.ok) {
-    const hata = await res.text();
-    throw new Error(`Supabase hatası: ${hata}`);
-  }
-  console.log(`✅ Kaydedildi: ${url}`);
-}
-
-async function main() {
-  console.log('🚀 Toplu yükleme başladı:', new Date().toISOString());
-
-  const sirkulerler = await tumSirkulerleriCek();
-
-  let yeniSayisi   = 0;
-  let mevcutSayisi = 0;
-  let hataSayisi   = 0;
-
-  for (const url of sirkulerler) {
-    try {
-      if (await zatenVarMi(url)) {
-        console.log(`⏭️  Zaten mevcut: ${url}`);
-        mevcutSayisi++;
-        continue;
-      }
-
-      const metin = await pdfdenMetinCikar(url);
-      if (!metin || metin.length < 50) {
-        console.log(`⚠️  Metin çıkarılamadı: ${url}`);
-        hataSayisi++;
-        continue;
-      }
-
-      const embedding = await embeddingUret(metin);
-      await supabaseKaydet(url, metin, embedding);
-      yeniSayisi++;
-
-      // API limitlerini zorlamayalım
-      await new Promise(r => setTimeout(r, 3000));
-
-    } catch (hata) {
-      console.error(`❌ Hata (${url}):`, hata.message);
-      hataSayisi++;
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  }
-
-  console.log(`\n📊 Sonuç:`);
-  console.log(`   ✅ Yeni eklenen: ${yeniSayisi}`);
-  console.log(`   ⏭️  Zaten mevcut: ${mevcutSayisi}`);
-  console.log(`   ❌ Hata: ${hataSayisi}`);
-}
-
-main().catch(console.error);
+      - name: Toplu yükleme (2026 tamamı)
+        if: ${{ github.event.inputs.mod == 'toplu' }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PDFCO_API_KEY: ${{ secrets.PDFCO_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
+        run: |
+          cd scripts
+          node bulk-ingest.js
