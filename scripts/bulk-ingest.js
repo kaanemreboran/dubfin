@@ -18,6 +18,7 @@ async function tumSirkulerleriCek() {
     console.log(`Google sayfa çekiliyor: start=${baslangic}`);
     const res  = await fetch(url);
     const veri = await res.json();
+    console.log('API yanıtı:', JSON.stringify(veri).substring(0, 500));
 
     if (!veri.items || veri.items.length === 0) {
       console.log('Daha fazla sonuç yok.');
