@@ -1,46 +1,51 @@
 import OpenAI from 'openai';
 import fetch from 'node-fetch';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai      = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const PDFCO_API_KEY    = process.env.PDFCO_API_KEY;
 const SUPABASE_URL     = process.env.SUPABASE_URL;
 const SUPABASE_KEY     = process.env.SUPABASE_SERVICE_KEY;
-const GOOGLE_API_KEY   = process.env.GOOGLE_API_KEY;
-const GOOGLE_SEARCH_CX = process.env.GOOGLE_SEARCH_CX;
+const SCRAPERAPI_KEY   = process.env.SCRAPERAPI_KEY;
 
 async function tumSirkulerleriCek() {
-  const sorgu = 'site:turmob.org.tr/sirkuler/detailPdf 2026';
   const linkler = [];
 
-  for (let baslangic = 1; baslangic <= 91; baslangic += 10) {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_SEARCH_CX}&q=${encodeURIComponent(sorgu)}&num=10&start=${baslangic}`;
+  // ScraperAPI ile JS render ederek TÜRMOB sirküler sayfasını çek
+  // start parametresiyle sayfalama yapıyoruz
+  for (let sayfa = 1; sayfa <= 10; sayfa++) {
+    const turMobUrl = `https://www.turmob.org.tr/Sirkuler/Mevzuat`;
+    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(turMobUrl)}&render=true&wait=3000`;
 
-    console.log(`Google sayfa çekiliyor: start=${baslangic}`);
-    const res  = await fetch(url);
-    const veri = await res.json();
-    console.log('API yanıtı:', JSON.stringify(veri).substring(0, 500));
+    console.log(`Sayfa ${sayfa} çekiliyor...`);
+    const res  = await fetch(scraperUrl);
+    const html = await res.text();
 
-    if (!veri.items || veri.items.length === 0) {
-      console.log('Daha fazla sonuç yok.');
-      break;
-    }
+    // detailPdf UUID'lerini çek
+    const uuidRegex = /detailPdf\/([a-f0-9-]{36})/g;
+    let eslesme;
+    let yeniVarMi = false;
 
-    for (const item of veri.items) {
-      if (item.link.includes('/sirkuler/detailPdf/') && !linkler.includes(item.link)) {
-        linkler.push(item.link);
+    while ((eslesme = uuidRegex.exec(html)) !== null) {
+      const uuid = eslesme[1];
+      const url  = `https://www.turmob.org.tr/sirkuler/detailPdf/${uuid}/sirkuler`;
+      if (!linkler.some(l => l.includes(uuid))) {
+        linkler.push(url);
+        yeniVarMi = true;
       }
     }
 
-    await new Promise(r => setTimeout(r, 1000));
+    console.log(`Sayfa ${sayfa}: toplam ${linkler.length} sirküler`);
+
+    if (!yeniVarMi) break;
+    await new Promise(r => setTimeout(r, 2000));
   }
 
-  console.log(`Toplam ${linkler.length} sirküler bulundu`);
   return linkler;
 }
 
-async function zatenVarMi(url) {
+async function zatenVarMi(uuid) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(url)}&select=id`,
+    `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=like.*${uuid}*&select=id`,
     { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
   );
   const data = await res.json();
@@ -49,7 +54,7 @@ async function zatenVarMi(url) {
 
 async function pdfdenMetinCikar(sirkulerUrl) {
   const uuidRegex = /detailPdf\/([a-f0-9-]{36})/;
-  const eslesme = sirkulerUrl.match(uuidRegex);
+  const eslesme   = sirkulerUrl.match(uuidRegex);
   if (!eslesme) throw new Error(`UUID çıkarılamadı: ${sirkulerUrl}`);
 
   const uuid   = eslesme[1];
@@ -77,7 +82,7 @@ async function embeddingUret(metin) {
 
 async function supabaseKaydet(url, metin, embedding) {
   const bugun = new Date().toISOString().split('T')[0];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
+  const res   = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_KEY,
@@ -98,6 +103,7 @@ async function main() {
   console.log('🚀 Toplu yükleme başladı:', new Date().toISOString());
 
   const sirkulerler = await tumSirkulerleriCek();
+  console.log(`\nToplam ${sirkulerler.length} sirküler işlenecek\n`);
 
   let yeniSayisi   = 0;
   let mevcutSayisi = 0;
@@ -105,8 +111,10 @@ async function main() {
 
   for (const url of sirkulerler) {
     try {
-      if (await zatenVarMi(url)) {
-        console.log(`⏭️  Zaten mevcut: ${url}`);
+      const uuid = url.match(/detailPdf\/([a-f0-9-]{36})/)[1];
+
+      if (await zatenVarMi(uuid)) {
+        console.log(`⏭️  Zaten mevcut: ${uuid}`);
         mevcutSayisi++;
         continue;
       }
@@ -125,7 +133,7 @@ async function main() {
       await new Promise(r => setTimeout(r, 3000));
 
     } catch (hata) {
-      console.error(`❌ Hata (${url}):`, hata.message);
+      console.error(`❌ Hata:`, hata.message);
       hataSayisi++;
       await new Promise(r => setTimeout(r, 2000));
     }
