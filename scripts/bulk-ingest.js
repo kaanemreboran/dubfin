@@ -81,6 +81,9 @@ async function supabaseKaydet(uuid, metin, embedding, ay) {
   const tarih = `${ay.yil}-${ay.ay}-01`;
   const url   = `https://www.turmob.org.tr/ekutuphane/detailPdf/${uuid}/sirkuler`;
 
+  // Benzersiz ID olarak UUID'nin ilk 8 karakterini sayıya çevir
+  const id = parseInt(uuid.replace(/-/g, '').substring(0, 8), 16) % 2147483647;
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
     headers: {
@@ -89,7 +92,7 @@ async function supabaseKaydet(uuid, metin, embedding, ay) {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal',
     },
-    body: JSON.stringify({ sirkuler_no: url, tarih, metin, embedding }),
+    body: JSON.stringify({ id, sirkuler_no: url, tarih, metin, embedding }),
   });
 
   if (!res.ok) {
