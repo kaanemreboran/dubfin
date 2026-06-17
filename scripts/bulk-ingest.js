@@ -59,21 +59,26 @@ async function zatenVarMi(uuid) {
 
 async function pdfdenMetinCikar(uuid) {
   const pdfUrl = `https://www.turmob.org.tr/ekutuphane/Read/${uuid}`;
-  
+
   const res = await fetch(pdfUrl, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0' }
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    }
   });
 
-  const text = await res.text();
-  
-  // PDF binary ise boş dön, text ise direkt kullan
-  if (text.includes('%PDF')) {
-    throw new Error('Binary PDF - PDF.co gerekli');
-  }
-  
-  return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
+  const buffer = await res.arrayBuffer();
+  const bytes  = new Uint8Array(buffer);
 
+  // PDF binary mi kontrol et
+  if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    throw new Error('Binary PDF döndü - farklı yöntem gerekli');
+  }
+
+  // Düz metin olarak decode et
+  const metin = new TextDecoder('utf-8').decode(buffer);
+  return metin.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
 async function embeddingUret(metin) {
   const res = await openai.embeddings.create({
     model: 'text-embedding-3-small',
