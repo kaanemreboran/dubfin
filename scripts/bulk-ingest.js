@@ -71,21 +71,16 @@ async function pdfdenMetinCikar(uuid) {
   const buffer = await res.arrayBuffer();
   const bytes  = new Uint8Array(buffer);
 
-  // PDF binary mi kontrol et
+  // PDF binary mi?
   if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-    throw new Error('Binary PDF döndü - farklı yöntem gerekli');
+    // Gerçek PDF — pdf-parse ile oku
+    const data = await pdfParse(Buffer.from(buffer));
+    return data.text.replace(/\s+/g, ' ').trim();
   }
 
-  // Düz metin olarak decode et
+  // Düz metin
   const metin = new TextDecoder('utf-8').decode(buffer);
   return metin.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-async function embeddingUret(metin) {
-  const res = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: metin.substring(0, 8000),
-  });
-  return res.data[0].embedding;
 }
 
 async function supabaseKaydet(uuid, metin, embedding, ay) {
