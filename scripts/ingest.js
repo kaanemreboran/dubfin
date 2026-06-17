@@ -2,80 +2,65 @@ import OpenAI from 'openai';
 import fetch from 'node-fetch';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
+const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+const GOOGLE_API_KEY   = process.env.GOOGLE_API_KEY;
+const GOOGLE_SEARCH_CX = process.env.GOOGLE_SEARCH_CX;
 
-const SCRAPERAPI_KEY = process.env.SCRAPERAPI_KEY;
-const PDFCO_API_KEY  = process.env.PDFCO_API_KEY;
-const SUPABASE_URL   = process.env.SUPABASE_URL;
-const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_KEY;
-
-// Bugünün tarihini YYYY-MM formatında döndürür
-function bugununkiAyKey() {
-  const now = new Date();
-  const yil = now.getFullYear();
-  const ay  = String(now.getMonth() + 1).padStart(2, '0');
-  return `${yil}-${ay}`;
-}
-
-// TÜRMOB sirküler listesini çek, bu ay yayınlananları filtrele
+// Google Custom Search ile bugün yayınlanan sirkülerleri bul
 async function turMobSirkulerleriniCek() {
-  const turMobUrl = `https://www.turmob.org.tr/Sirkuler`;
-  const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(turMobUrl)}&render=true`;
+  // Bugünün tarihini GG/AA/YYYY formatında al
+  const bugun = new Date();
+  const gun   = String(bugun.getDate()).padStart(2, '0');
+  const ay    = String(bugun.getMonth() + 1).padStart(2, '0');
+  const yil   = bugun.getFullYear();
+  const tarihStr = `${gun}.${ay}.${yil}`;
 
-  console.log(`TÜRMOB'dan çekiliyor: ${turMobUrl}`);
-  const res  = await fetch(scraperUrl);
-  const html = await res.text();
+  const sorgu = `site:turmob.org.tr/sirkuler/detailPdf ${tarihStr}`;
+  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_SEARCH_CX}&q=${encodeURIComponent(sorgu)}&num=10`;
 
-  // detailPdf linklerini çek
-  const linkRegex = /href="(\/sirkuler\/detailPdf\/[^"]+)"/g;
-  const linkler = [];
-  let eslesme;
+  console.log(`Google araması: ${sorgu}`);
+  const res  = await fetch(url);
+  const veri = await res.json();
 
-  while ((eslesme = linkRegex.exec(html)) !== null) {
-    const tamUrl = `https://www.turmob.org.tr${eslesme[1]}`;
-    if (!linkler.includes(tamUrl)) linkler.push(tamUrl);
+  if (!veri.items || veri.items.length === 0) {
+    console.log('Google sonucu bulunamadı.');
+    return [];
   }
 
-  console.log(`${linkler.length} sirküler linki bulundu`);
+  const linkler = veri.items
+    .map(item => item.link)
+    .filter(link => link.includes('/sirkuler/detailPdf/'));
+
+  console.log(`${linkler.length} yeni sirküler bulundu`);
   return linkler;
 }
 
-// Supabase'de zaten var mı?
+// Supabase'de var mı?
 async function zatenVarMi(url) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/sirkuler?sirkuler_no=eq.${encodeURIComponent(url)}&select=id`,
-    {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      },
-    }
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
   );
   const data = await res.json();
   return Array.isArray(data) && data.length > 0;
 }
 
-// PDF.co ile sirküler sayfasından metin çıkar
+// PDF.co ile metin çıkar
 async function pdfdenMetinCikar(sirkulerUrl) {
   console.log(`Metin çıkarılıyor: ${sirkulerUrl}`);
-
-  // detailPdf URL'sini direkt PDF olarak gönder
-  const pdfUrl = sirkulerUrl.replace('/sirkuler/detailPdf/', '/sirkuler/pdf/');
-
   const res = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
     method: 'POST',
-    headers: {
-      'x-api-key': PDFCO_API_KEY,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'x-api-key': PDFCO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: sirkulerUrl, inline: true, async: false }),
   });
-
   const veri = await res.json();
   if (veri.error) throw new Error(`PDF.co hatası: ${veri.message}`);
   return veri.body || '';
 }
 
-// OpenAI embedding üret
+// OpenAI embedding
 async function embeddingUret(metin) {
   const res = await openai.embeddings.create({
     model: 'text-embedding-3-small',
@@ -84,10 +69,9 @@ async function embeddingUret(metin) {
   return res.data[0].embedding;
 }
 
-// Supabase REST API ile kaydet
+// Supabase'e kaydet
 async function supabaseKaydet(url, metin, embedding) {
   const bugun = new Date().toISOString().split('T')[0];
-
   const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
     headers: {
@@ -96,59 +80,44 @@ async function supabaseKaydet(url, metin, embedding) {
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal',
     },
-    body: JSON.stringify({
-      sirkuler_no: url,
-      tarih:       bugun,
-      metin:       metin,
-      embedding:   embedding,
-    }),
+    body: JSON.stringify({ sirkuler_no: url, tarih: bugun, metin, embedding }),
   });
-
   if (!res.ok) {
     const hata = await res.text();
-    throw new Error(`Supabase kayıt hatası: ${hata}`);
+    throw new Error(`Supabase hatası: ${hata}`);
   }
-
   console.log(`✅ Kaydedildi: ${url}`);
 }
 
-// Ana fonksiyon
 async function main() {
   console.log('🚀 DubFin ingestion başladı:', new Date().toISOString());
 
   const sirkulerler = await turMobSirkulerleriniCek();
-
   if (sirkulerler.length === 0) {
-    console.log('📭 Sirküler linki bulunamadı.');
+    console.log('📭 Bugün yeni sirküler yok.');
     return;
   }
 
   let yeniSayisi = 0;
-
   for (const url of sirkulerler) {
     try {
       if (await zatenVarMi(url)) {
         console.log(`⏭️  Zaten mevcut: ${url}`);
         continue;
       }
-
       const metin = await pdfdenMetinCikar(url);
       if (!metin || metin.length < 50) {
         console.log(`⚠️  Metin çıkarılamadı: ${url}`);
         continue;
       }
-
       const embedding = await embeddingUret(metin);
       await supabaseKaydet(url, metin, embedding);
       yeniSayisi++;
-
       await new Promise(r => setTimeout(r, 2000));
-
     } catch (hata) {
       console.error(`❌ Hata (${url}):`, hata.message);
     }
   }
-
   console.log(`✅ Tamamlandı. ${yeniSayisi} yeni sirküler eklendi.`);
 }
 
