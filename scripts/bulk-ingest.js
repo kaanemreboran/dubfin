@@ -1,45 +1,56 @@
 import OpenAI from 'openai';
 import fetch from 'node-fetch';
 
-const openai      = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const PDFCO_API_KEY    = process.env.PDFCO_API_KEY;
-const SUPABASE_URL     = process.env.SUPABASE_URL;
-const SUPABASE_KEY     = process.env.SUPABASE_SERVICE_KEY;
-const SCRAPERAPI_KEY   = process.env.SCRAPERAPI_KEY;
+const openai        = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const PDFCO_API_KEY = process.env.PDFCO_API_KEY;
+const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+
+// Mevzuat Sirküleri kategori UUID'si
+const KATEGORI_UUID = 'e2f9f8fd-af81-456b-8626-2e938f66dd45';
 
 async function tumSirkulerleriCek() {
   const linkler = [];
 
-  // ScraperAPI ile JS render ederek TÜRMOB sirküler sayfasını çek
-  // start parametresiyle sayfalama yapıyoruz
-  for (let sayfa = 1; sayfa <= 10; sayfa++) {
-    const turMobUrl = `https://www.turmob.org.tr/Sirkuler/Mevzuat`;
-    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(turMobUrl)}&render=true&wait=3000`;
+  for (let sayfa = 1; sayfa <= 20; sayfa++) {
+    const url = `https://www.turmob.org.tr/ekutuphane/${KATEGORI_UUID}/mevzuat-sirkuleri/${sayfa}`;
+    console.log(`Sayfa ${sayfa} çekiliyor: ${url}`);
 
-    console.log(`Sayfa ${sayfa} çekiliyor...`);
-    const res  = await fetch(scraperUrl);
+    const res  = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0' }
+    });
     const html = await res.text();
 
-    // detailPdf UUID'lerini çek
-    const uuidRegex = /detailPdf\/([a-f0-9-]{36})/g;
+    // ekutuphane/detailPdf UUID'lerini çek
+    const uuidRegex = /ekutuphane\/detailPdf\/([a-f0-9-]{36})/g;
     let eslesme;
     let yeniVarMi = false;
 
     while ((eslesme = uuidRegex.exec(html)) !== null) {
       const uuid = eslesme[1];
-      const url  = `https://www.turmob.org.tr/sirkuler/detailPdf/${uuid}/sirkuler`;
-      if (!linkler.some(l => l.includes(uuid))) {
-        linkler.push(url);
+      if (!linkler.includes(uuid)) {
+        linkler.push(uuid);
         yeniVarMi = true;
       }
     }
 
-    console.log(`Sayfa ${sayfa}: toplam ${linkler.length} sirküler`);
+    console.log(`Sayfa ${sayfa}: ${linkler.length} sirküler bulundu`);
 
-    if (!yeniVarMi) break;
-    await new Promise(r => setTimeout(r, 2000));
+    // 2026 öncesine geçtik mi kontrol et
+    if (html.includes('2025') && !html.includes('2026')) {
+      console.log('2025 sirkülerine geçildi, duruyoruz.');
+      break;
+    }
+
+    if (!yeniVarMi) {
+      console.log('Yeni sirküler yok, duruyoruz.');
+      break;
+    }
+
+    await new Promise(r => setTimeout(r, 1500));
   }
 
+  console.log(`\nToplam ${linkler.length} UUID bulundu`);
   return linkler;
 }
 
@@ -52,12 +63,7 @@ async function zatenVarMi(uuid) {
   return Array.isArray(data) && data.length > 0;
 }
 
-async function pdfdenMetinCikar(sirkulerUrl) {
-  const uuidRegex = /detailPdf\/([a-f0-9-]{36})/;
-  const eslesme   = sirkulerUrl.match(uuidRegex);
-  if (!eslesme) throw new Error(`UUID çıkarılamadı: ${sirkulerUrl}`);
-
-  const uuid   = eslesme[1];
+async function pdfdenMetinCikar(uuid) {
   const pdfUrl = `https://www.turmob.org.tr/ekutuphane/Read/${uuid}`;
   console.log(`PDF okunuyor: ${pdfUrl}`);
 
@@ -80,9 +86,11 @@ async function embeddingUret(metin) {
   return res.data[0].embedding;
 }
 
-async function supabaseKaydet(url, metin, embedding) {
+async function supabaseKaydet(uuid, metin, embedding) {
   const bugun = new Date().toISOString().split('T')[0];
-  const res   = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
+  const url   = `https://www.turmob.org.tr/ekutuphane/detailPdf/${uuid}/sirkuler`;
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/sirkuler`, {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_KEY,
@@ -92,48 +100,46 @@ async function supabaseKaydet(url, metin, embedding) {
     },
     body: JSON.stringify({ sirkuler_no: url, tarih: bugun, metin, embedding }),
   });
+
   if (!res.ok) {
     const hata = await res.text();
     throw new Error(`Supabase hatası: ${hata}`);
   }
-  console.log(`✅ Kaydedildi: ${url}`);
+  console.log(`✅ Kaydedildi: ${uuid}`);
 }
 
 async function main() {
   console.log('🚀 Toplu yükleme başladı:', new Date().toISOString());
 
-  const sirkulerler = await tumSirkulerleriCek();
-  console.log(`\nToplam ${sirkulerler.length} sirküler işlenecek\n`);
+  const uuidler = await tumSirkulerleriCek();
 
   let yeniSayisi   = 0;
   let mevcutSayisi = 0;
   let hataSayisi   = 0;
 
-  for (const url of sirkulerler) {
+  for (const uuid of uuidler) {
     try {
-      const uuid = url.match(/detailPdf\/([a-f0-9-]{36})/)[1];
-
       if (await zatenVarMi(uuid)) {
         console.log(`⏭️  Zaten mevcut: ${uuid}`);
         mevcutSayisi++;
         continue;
       }
 
-      const metin = await pdfdenMetinCikar(url);
+      const metin = await pdfdenMetinCikar(uuid);
       if (!metin || metin.length < 50) {
-        console.log(`⚠️  Metin çıkarılamadı: ${url}`);
+        console.log(`⚠️  Metin çıkarılamadı: ${uuid}`);
         hataSayisi++;
         continue;
       }
 
       const embedding = await embeddingUret(metin);
-      await supabaseKaydet(url, metin, embedding);
+      await supabaseKaydet(uuid, metin, embedding);
       yeniSayisi++;
 
       await new Promise(r => setTimeout(r, 3000));
 
     } catch (hata) {
-      console.error(`❌ Hata:`, hata.message);
+      console.error(`❌ Hata (${uuid}):`, hata.message);
       hataSayisi++;
       await new Promise(r => setTimeout(r, 2000));
     }
