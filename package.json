@@ -1,9 +1,10 @@
 {
-  "name": "dubfin",
+  "name": "dubfin-ingest",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "@pinecone-database/pinecone": "^3.0.0",
-    "@supabase/supabase-js": "^2.0.0",
-    "openai": "^4.0.0"
+    "openai": "^4.28.0",
+    "node-fetch": "^3.3.2",
+    "pdf-parse": "^1.1.1"
   }
 }
