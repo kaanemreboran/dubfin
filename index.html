@@ -238,32 +238,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);min-
 </div>
 
 <script>
-var SIRKULER = [
-  {no:"2026/83",baslik:"SGK Tecil İşlemlerinde Teminatsız Tutar 10 Milyon TL'ye Yükseltildi",tarih:"15.06.2026",kat:"SGK",yeni:true,
-   ozet:"SGK borcunu taksitlendirmek istediğinizde artık 10 milyon TL'ye kadar teminat vermeniz gerekmeyecek. Borcun 10 milyon TL'yi aşması halinde, aşan kısmın yarısı kadar teminat istenecektir.",
-   metin:"13.06.2026 tarihli ve 33279 sayılı Resmi Gazete'de yayımlanan 11414 sayılı Cumhurbaşkanı Kararı ile SGK alacaklarının tecil ve taksitlendirilmesinde teminat eşiği 1 milyon TL'den 10 milyon TL'ye yükseltilmiştir.\n\n• 10 milyon TL'ye kadar olan borçlar için teminat aranmayacak\n• 10 milyon TL'yi aşan borçların aşan kısmının yarısı kadar teminat istenecek\n\nDayanağı: 6183 sayılı Kanun md.48, 5510 sayılı Kanun md.88"},
-  {no:"2026/82",baslik:"E-Fatura Zorunluluk Eşiği Güncellendi",tarih:"14.06.2026",kat:"Fatura",yeni:true,
-   ozet:"E-fatura ve e-arşiv fatura uygulamasına dahil olma sınırları yeniden belirlendi. Yeni eşikler 01.01.2026 tarihinden itibaren geçerlidir.",
-   metin:"Gelir İdaresi Başkanlığı tarafından yapılan düzenleme ile e-fatura ve e-arşiv fatura kullanım zorunluluğuna ilişkin ciro eşiği güncellenmiştir.\n\nGüncel bilgi için GİB'in resmi sitesini kontrol ediniz."},
-  {no:"2026/81",baslik:"KDV İade Usul ve Esasları Güncellendi",tarih:"12.06.2026",kat:"KDV",yeni:true,
-   ozet:"KDV Genel Uygulama Tebliğinde değişiklik yapılarak iade süreçleri sadeleştirildi ve hızlandırıldı.",
-   metin:"KDV iade taleplerinde uygulanacak usul ve esaslar yeniden düzenlenmiştir.\n\nNakden iade için YMM raporu ve teminat tutarları güncellenmiştir.\n\nMahsuben iade talepleri daha hızlı sonuçlandırılacaktır."},
-  {no:"2026/80",baslik:"2026 Yılı Asgari Ücret Desteği Esasları Açıklandı",tarih:"10.06.2026",kat:"SGK",yeni:false,
-   ozet:"01.01.2026-31.12.2026 döneminde sigortalı başına aylık 1.270 TL asgari ücret desteği uygulanacaktır.",
-   metin:"5510 sayılı Kanun kapsamında 2026 yılında uygulanacak asgari ücret desteği:\n\n• Tutar: Sigortalı başına 1.270 TL/ay\n• Dönem: 01.01.2026 - 31.12.2026\n\nDestekten yararlanma şartları sirküler ekinde açıklanmıştır."},
-  {no:"2026/79",baslik:"Muhtasar Beyanname Uygulama Rehberi",tarih:"08.06.2026",kat:"Muhtasar",yeni:false,
-   ozet:"Muhtasar ve Prim Hizmet Beyannamesi uygulamasına ilişkin 2026 yılı güncel rehberi yayımlandı.",
-   metin:"GİB tarafından hazırlanan rehber şu konuları kapsar:\n\n• Muhtasar beyannamesinde yapılan son değişiklikler\n• Hangi ödemeler beyan kapsamındadır?\n• Beyanname verme ve ödeme süreleri\n• Sık yapılan hatalar ve çözümleri"},
-  {no:"2026/78",baslik:"Enflasyon Düzeltmesi 2026 Uygulaması",tarih:"05.06.2026",kat:"Genel",yeni:false,
-   ozet:"Vergi Usul Kanunu kapsamında 2026 yılı enflasyon düzeltmesi uygulamasına ilişkin usul ve esaslar belirlendi.",
-   metin:"Enflasyon düzeltmesi kapsamında:\n\n• Kimler yapmak zorunda?\n• Hangi kıymetler düzeltmeye tabi?\n• Düzeltme katsayıları ve hesaplama yöntemi\n• İlk uygulama ve sonraki dönemlerde yapılacaklar"},
-  {no:"2026/53",baslik:"2025 Yılı Yüksek Ücret Gelirlerinin Beyanı",tarih:"23.03.2026",kat:"Genel",yeni:false,
-   ozet:"2025 takvim yılında tek işverenden alınan ve 4.300.000 TL'yi aşan ücret gelirlerinin beyan edilmesi gerekiyor.",
-   metin:"GVK md.86 uyarınca, tek işverenden elde edilen ücretin 4.300.000 TL'yi aşması halinde:\n\n• Yıllık gelir vergisi beyannamesi verilmesi zorunludur\n• Beyanname Mart ayında verilir\n• Vergi Mart ve Temmuz aylarında iki eşit taksitte ödenir"},
-  {no:"2026/36",baslik:"2026 Yılı Asgari Ücret ve SGK Parametreleri",tarih:"29.01.2026",kat:"SGK",yeni:false,
-   ozet:"01.01.2026 tarihinden itibaren asgari ücret brüt 33.030 TL, net 28.075,50 TL olarak belirlendi.",
-   metin:"2026 yılı bordro parametreleri:\n\n• Asgari ücret brüt: 33.030 TL\n• Asgari ücret net: 28.075,50 TL\n• Günlük brüt asgari ücret: 1.101 TL\n• SGK tavan matrahı: 297.270 TL (brüt asgari ücretin 9 katı)\n• SGK taban matrahı: 33.030 TL\n• Asgari ücret desteği: 1.270 TL/sigortalı\n• Kıdem tazminatı tavanı (01.01-30.06.2026): 53.919,68 TL"}
-];
+var SIRKULER = [];
 
 var TAKVIM = {
   1:[{t:"2026-01-23",g:"23 Oca",a:"Aralık 2025 KDV beyannamesi",tip:"KDV"},{t:"2026-01-23",g:"23 Oca",a:"Aralık 2025 Muhtasar Beyannamesi",tip:"MUH"},{t:"2026-01-26",g:"26 Oca",a:"Aralık 2025 SGK prim ödemesi",tip:"SGK"},{t:"2026-01-31",g:"31 Oca",a:"GV beyannamesi — 2025 basit usul",tip:"GV"}],
@@ -322,7 +297,21 @@ function yenileriGoster(){
     badge.style.background='var(--red2)';
     badge.style.color='var(--red)';
   }
-  renderList();
+  async function sirkulerleriYukle(){
+  try{
+    var r = await fetch('/api/sirkulerler');
+    var data = await r.json();
+    SIRKULER = data;
+
+    var yeniCount = SIRKULER.filter(function(s){return s.yeni;}).length;
+    document.getElementById('yeni-text').textContent = yeniCount+' yeni sirküler';
+
+    renderList();
+  }catch(e){
+    document.getElementById('sirk-list').innerHTML = '<div class="sirk-empty">Sirkülerler yüklenemedi: '+e.message+'</div>';
+  }
+}
+  sirkulerleriYukle();
 }
 
 function renderList(){
