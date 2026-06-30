@@ -272,20 +272,6 @@ var sadaceYeni = false;
 // Tarih
 document.getElementById('tarih-el').textContent = bugun.getDate()+' '+AY_TR[bugun.getMonth()]+' '+bugun.getFullYear();
 
-// Yeni badge
-var yeniCount = SIRKULER.filter(function(s){return s.yeni;}).length;
-document.getElementById('yeni-text').textContent = yeniCount+' yeni sirküler';
-
-// Bugünkü tarihi kontrol (yeni sirküler = son 1 gün içinde eklenen)
-function bugunMu(tarihStr){
-  // Tarih formatı: "15.06.2026"
-  var p = tarihStr.split('.');
-  if(p.length<3) return false;
-  var t = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-  t.setHours(0,0,0,0);
-  return t.getTime() === bugun.getTime();
-}
-
 function yenileriGoster(){
   sadaceYeni = !sadaceYeni;
   var badge = document.getElementById('yeni-badge');
@@ -297,29 +283,19 @@ function yenileriGoster(){
     badge.style.background='var(--red2)';
     badge.style.color='var(--red)';
   }
-  async function sirkulerleriYukle(){
-  try{
-    var r = await fetch('/api/sirkulerler');
-    var data = await r.json();
-    SIRKULER = data;
-
-    var yeniCount = SIRKULER.filter(function(s){return s.yeni;}).length;
-    document.getElementById('yeni-text').textContent = yeniCount+' yeni sirküler';
-
-    renderList();
-  }catch(e){
-    document.getElementById('sirk-list').innerHTML = '<div class="sirk-empty">Sirkülerler yüklenemedi: '+e.message+'</div>';
-  }
-}
-  sirkulerleriYukle();
+  renderList();
 }
 
 function renderList(){
   var el = document.getElementById('sirk-list');
   el.innerHTML = '';
 
+  if(!SIRKULER.length){
+    el.innerHTML = '<div class="sirk-empty">Sirkülerler yükleniyor...</div>';
+    return;
+  }
+
   if(sadaceYeni){
-    // Sadece yeni sirkülerler düz liste
     var yeniListe = SIRKULER.filter(function(s){return s.yeni;});
     if(!yeniListe.length){
       el.innerHTML='<div class="sirk-empty">Bugün yeni sirküler yok</div>';
@@ -332,7 +308,6 @@ function renderList(){
   }
 
   if(aramaMetni){
-    // Arama modunda düz liste
     var aramaListe = SIRKULER.filter(function(s){
       return s.baslik.toLowerCase().includes(aramaMetni) || s.no.toLowerCase().includes(aramaMetni);
     });
@@ -496,7 +471,23 @@ async function aiSor(){
   msgs.scrollTop=msgs.scrollHeight;
 }
 
-renderList();
+// Supabase'den sirkülerleri dinamik yükle
+async function sirkulerleriYukle(){
+  try{
+    var r = await fetch('/api/sirkulerler');
+    var data = await r.json();
+    SIRKULER = data;
+
+    var yeniCount = SIRKULER.filter(function(s){return s.yeni;}).length;
+    document.getElementById('yeni-text').textContent = yeniCount+' yeni sirküler';
+
+    renderList();
+  }catch(e){
+    document.getElementById('sirk-list').innerHTML = '<div class="sirk-empty">Sirkülerler yüklenemedi: '+e.message+'</div>';
+  }
+}
+
+sirkulerleriYukle();
 </script>
 </body>
 </html>
